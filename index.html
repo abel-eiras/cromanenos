@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="gl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Garantía técnica de privacidade: connect-src 'none' fai que o propio navegador
+     bloquee calquera intento de enviar datos a un servidor. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src blob:; media-src blob:; connect-src 'none'">
+<title>Cromanenos</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Cromanenos</h1>
+  <p class="privacy" data-i18n="privacy"></p>
+  <span class="spacer"></span>
+  <button id="openTricks" class="big" data-i18n="tricks"></button>
+  <button id="openSettings" class="big" data-i18n-aria="settings" data-i18n-title="settings">⚙</button>
+</header>
+
+<main>
+  <section class="stage">
+    <canvas id="view" width="1280" height="720" role="img" data-i18n-aria="preview"></canvas>
+    <p id="hint" class="hint"></p>
+
+    <div class="transport">
+      <button id="play" class="big" disabled></button>
+      <input id="seek" type="range" min="0" max="1000" value="0" disabled data-i18n-aria="position">
+      <span id="clock">0:00 / 0:00</span>
+    </div>
+
+    <div class="timeline">
+      <div class="trow">
+        <span class="tlabel" data-i18n="trackTop"></span>
+        <div class="strip clips" id="strip1" data-track="1"></div>
+        <div class="tadd">
+          <label class="file" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="1"></label>
+          <button data-stop="1" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
+        </div>
+      </div>
+      <div class="trow">
+        <span class="tlabel" data-i18n="trackBottom"></span>
+        <div class="strip clips" id="strip0" data-track="0"></div>
+        <div class="tadd">
+          <label class="file" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="0"></label>
+          <button data-stop="0" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
+        </div>
+      </div>
+      <div class="trow thin">
+        <span class="tlabel" data-i18n="trackStickers"></span>
+        <div class="strip items" id="stripO"></div>
+        <div class="tadd"></div>
+      </div>
+      <div class="trow thin">
+        <span class="tlabel" data-i18n="trackSound"></span>
+        <div class="strip items" id="stripS"></div>
+        <div class="tadd"></div>
+      </div>
+    </div>
+
+    <div class="export">
+      <button id="export" class="big go" disabled data-i18n="save"></button>
+      <progress id="progress" max="1" value="0" hidden></progress>
+      <a id="download" hidden data-i18n="download"></a>
+      <span id="status" role="status"></span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="card">
+      <h2 data-i18n="cardClip"></h2>
+      <p id="clipName" class="name"></p>
+      <div class="tools">
+        <button id="opSplit" data-i18n="split"></button>
+        <button id="opFreeze" data-i18n="freeze"></button>
+        <button id="opLeft" data-i18n="moveLeft"></button>
+        <button id="opRight" data-i18n="moveRight"></button>
+        <button id="opDel" data-i18n="del"></button>
+      </div>
+      <label id="stillRow" hidden><span data-i18n="stillDur"></span>
+        <input id="stillDur" type="range" min="0.5" max="10" step="0.5" value="3">
+      </label>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="cardFx"></h2>
+      <p id="fxHint" class="hint" data-i18n="fxHint"></p>
+      <div id="fxPalette" class="palette"></div>
+      <div id="fxList"></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="cardStickers"></h2>
+      <div id="stickerPalette" class="palette emoji"></div>
+      <div class="row">
+        <input id="textIn" type="text" maxlength="40" data-i18n-ph="textPh" data-i18n-aria="textPh">
+        <button id="addText" data-i18n="addText"></button>
+      </div>
+      <p id="noItem" class="hint" data-i18n="noItem"></p>
+      <div id="itemBox" hidden>
+        <label><span data-i18n="itemSize"></span>
+          <input id="itemSize" type="range" min="40" max="420" step="4" value="180">
+        </label>
+        <label><span data-i18n="stillDur"></span>
+          <input id="itemDur" type="range" min="0.5" max="20" step="0.5" value="3">
+        </label>
+        <div class="tools">
+          <button id="itemHere" data-i18n="putHere"></button>
+          <button id="itemDel" data-i18n="delItem"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="cardSound"></h2>
+      <button id="rec" class="big"></button>
+      <p class="hint" data-i18n="sfxTip"></p>
+      <div id="sfxPalette" class="palette"></div>
+      <p id="noSound" class="hint" data-i18n="noSound"></p>
+      <div id="soundBox" class="tools" hidden>
+        <button id="soundHere" data-i18n="putHere"></button>
+        <button id="soundDel" data-i18n="delSound"></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="settingsDialog">
+  <h2>⚙ <span data-i18n="settings"></span></h2>
+  <h3 data-i18n="language"></h3>
+  <div id="langButtons" class="palette"></div>
+  <div class="row end"><button class="big" data-close data-i18n="close"></button></div>
+</dialog>
+
+<dialog id="tricksDialog">
+  <h2 data-i18n="tricks"></h2>
+  <div id="tricksBody"></div>
+  <div class="row end"><button class="big" data-close data-i18n="close"></button></div>
+</dialog>
+
+<dialog id="smDialog">
+  <h2 data-i18n="sm_title"></h2>
+  <div id="smView" class="smview">
+    <video id="smVideo" autoplay playsinline muted></video>
+    <canvas id="smOnion" hidden></canvas>
+  </div>
+  <p id="smMsg" class="hint" role="status"></p>
+  <div class="row">
+    <button id="smSnap" class="big go" data-i18n="sm_capture"></button>
+    <button id="smUndo" data-i18n="sm_undo"></button>
+  </div>
+  <div id="smStrip" class="smstrip"></div>
+  <div class="row">
+    <span data-i18n="sm_fps"></span>
+    <div id="smFps" class="speed">
+      <button data-fps="4">4</button>
+      <button data-fps="8">8</button>
+      <button data-fps="12">12</button>
+    </div>
+  </div>
+  <label class="file"><span data-i18n="sm_files"></span><input id="smFiles" type="file" multiple accept="image/*"></label>
+  <div class="row end">
+    <button id="smCancel" data-i18n="cancel"></button>
+    <button id="smUse" class="big go"></button>
+  </div>
+</dialog>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

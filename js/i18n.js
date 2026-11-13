@@ -1,0 +1,242 @@
+// Textos da aplicación en galego (por defecto), castelán e inglés.
+export const LANGS = { gl: 'Galego', es: 'Castellano', en: 'English' };
+
+const D = {
+  privacy: ['🔒 Os teus vídeos non saen deste ordenador', '🔒 Tus vídeos no salen de este ordenador', '🔒 Your videos never leave this computer'],
+  settings: ['Configuración', 'Configuración', 'Settings'],
+  language: ['Idioma', 'Idioma', 'Language'],
+  close: ['Pechar', 'Cerrar', 'Close'],
+  cancel: ['Cancelar', 'Cancelar', 'Cancel'],
+  play: ['▶ Ver', '▶ Ver', '▶ Play'],
+  pause: ['⏸ Parar', '⏸ Parar', '⏸ Pause'],
+  position: ['Posición', 'Posición', 'Position'],
+  save: ['💾 Gardar vídeo', '💾 Guardar vídeo', '💾 Save video'],
+  download: ['⬇ Descargar o vídeo', '⬇ Descargar el vídeo', '⬇ Download the video'],
+  preview: ['Vista do vídeo', 'Vista del vídeo', 'Video preview'],
+
+  trackTop: ['2 · Enriba', '2 · Encima', '2 · On top'],
+  trackBottom: ['1 · Fondo', '1 · Fondo', '1 · Background'],
+  trackSound: ['🔊 Sons', '🔊 Sonidos', '🔊 Sounds'],
+  addFile: ['Engadir vídeo ou fotos', 'Añadir vídeo o fotos', 'Add video or photos'],
+  addStop: ['Facer stop motion', 'Hacer stop motion', 'Make stop motion'],
+
+  hintEmpty: ['Preme ➕ en «Fondo» para engadir un vídeo ou unha foto', 'Pulsa ➕ en «Fondo» para añadir un vídeo o una foto', 'Press ➕ on “Background” to add a video or a photo'],
+  hintTop: ['Agora engade algo en «Enriba» para facer trucos', 'Ahora añade algo en «Encima» para hacer trucos', 'Now add something to “On top” to do tricks'],
+  hintPick: ['Toca no vídeo a cor que queres facer desaparecer', 'Toca en el vídeo el color que quieres hacer desaparecer', 'Tap the colour in the video that you want to make disappear'],
+  tipJump: ['💡 Truco: para que algo apareza ou desapareza, grava dúas tomas sen mover a cámara e ponas seguidas na mesma pista.',
+    '💡 Truco: para que algo aparezca o desaparezca, graba dos tomas sin mover la cámara y ponlas seguidas en la misma pista.',
+    '💡 Trick: to make something appear or vanish, film two takes without moving the camera and put them one after the other on the same track.'],
+  tipSock: ['💡 Truco: pon de fondo unha foto do sitio baleiro. O que teña a cor escollida (un calcetín verde!) vólvese invisible.',
+    '💡 Truco: pon de fondo una foto del sitio vacío. Lo que tenga el color elegido (¡un calcetín verde!) se vuelve invisible.',
+    '💡 Trick: use a photo of the empty place as background. Anything in the chosen colour (a green sock!) turns invisible.'],
+
+  cardClip: ['🎬 Anaco escollido', '🎬 Trozo elegido', '🎬 Selected clip'],
+  noClip: ['Toca un anaco na liña de tempo', 'Toca un trozo en la línea de tiempo', 'Tap a clip on the timeline'],
+  speed: ['Velocidade', 'Velocidad', 'Speed'],
+  reverse: ['⏪ Ao revés', '⏪ Al revés', '⏪ Backwards'],
+  mirror: ['🪞 Espello', '🪞 Espejo', '🪞 Mirror'],
+  split: ['✂ Cortar aquí', '✂ Cortar aquí', '✂ Cut here'],
+  freeze: ['🧊 Conxelar aquí', '🧊 Congelar aquí', '🧊 Freeze here'],
+  moveLeft: ['⬅ Antes', '⬅ Antes', '⬅ Earlier'],
+  moveRight: ['Despois ➡', 'Después ➡', 'Later ➡'],
+  del: ['🗑 Borrar', '🗑 Borrar', '🗑 Delete'],
+  stillDur: ['Canto dura (segundos)', 'Cuánto dura (segundos)', 'How long (seconds)'],
+  freezeName: ['Conxelado', 'Congelado', 'Freeze'],
+
+  tricks: ['💡 Trucos', '💡 Trucos', '💡 Tricks'],
+  trackStickers: ['⭐ Adhesivos', '⭐ Pegatinas', '⭐ Stickers'],
+  cardFx: ['✨ Efectos', '✨ Efectos', '✨ Effects'],
+  fxHint: ['Toca primeiro un anaco na liña de tempo e despois escolle un efecto', 'Toca primero un trozo en la línea de tiempo y después elige un efecto', 'First tap a clip on the timeline, then choose an effect'],
+  fx_chroma: ['Croma', 'Croma', 'Green screen'],
+  fx_split: ['Pantalla dividida', 'Pantalla dividida', 'Split screen'],
+  fx_ghost: ['Pantasma', 'Fantasma', 'Ghost'],
+  fx_size: ['Tamaño', 'Tamaño', 'Size'],
+  fx_mirror: ['Espello', 'Espejo', 'Mirror'],
+  fx_filter: ['Cores', 'Colores', 'Colours'],
+  fx_speed: ['Velocidade', 'Velocidad', 'Speed'],
+  fx_reverse: ['Ao revés', 'Al revés', 'Backwards'],
+  removeFx: ['Quitar {name}', 'Quitar {name}', 'Remove {name}'],
+  fxBottomHint: ['Este anaco está no fondo e detrás del só hai negro. Para mesturar dúas imaxes, pon unha delas en «Enriba».',
+    'Este trozo está en el fondo y detrás solo hay negro. Para mezclar dos imágenes, pon una de ellas en «Encima».',
+    'This clip is on the background, with only black behind it. To mix two pictures, put one of them on “On top”.'],
+  chromaInfo: ['A cor escollida vólvese invisible e vese o que hai debaixo.', 'El color elegido se vuelve invisible y se ve lo que hay debajo.', 'The chosen colour turns invisible and you see what is underneath.'],
+  splitInfo: ['Á esquerda da liña vese o que hai debaixo; á dereita, este anaco.', 'A la izquierda de la línea se ve lo que hay debajo; a la derecha, este trozo.', 'Left of the line you see what is underneath; right of it, this clip.'],
+  reverseInfo: ['O anaco vese do final ao comezo.', 'El trozo se ve del final al principio.', 'The clip plays from the end to the start.'],
+  mirrorInfo: ['Dálle a volta: a esquerda pasa á dereita.', 'Le da la vuelta: la izquierda pasa a la derecha.', 'Flips it: left becomes right.'],
+  putHere: ['📍 Poñer na liña vermella', '📍 Poner en la línea roja', '📍 Move to the red line'],
+  noItem: ['Toca un adhesivo ou un texto para cambialo', 'Toca una pegatina o un texto para cambiarlo', 'Tap a sticker or a text to change it'],
+  noSound: ['Toca un son na liña de tempo para cambialo', 'Toca un sonido en la línea de tiempo para cambiarlo', 'Tap a sound on the timeline to change it'],
+
+  cardChroma: ['🟩 Croma', '🟩 Croma', '🟩 Green screen'],
+  keyColor: ['Cor que desaparece', 'Color que desaparece', 'Colour that disappears'],
+  pick: ['🎯 Escoller a cor no vídeo', '🎯 Elegir el color en el vídeo', '🎯 Pick the colour in the video'],
+  tol: ['Canto borra', 'Cuánto borra', 'How much it erases'],
+  soft: ['Bordo suave', 'Borde suave', 'Soft edge'],
+
+  cardSplit: ['👯 Pantalla dividida', '👯 Pantalla dividida', '👯 Split screen'],
+  splitOn: ['Esquerda: fondo · Dereita: enriba', 'Izquierda: fondo · Derecha: encima', 'Left: background · Right: top'],
+  splitPos: ['Onde vai a liña', 'Dónde va la línea', 'Where the line goes'],
+  splitSoft: ['Liña difuminada', 'Línea difuminada', 'Blurry line'],
+
+  cardGhost: ['👻 Pantasma e tamaño', '👻 Fantasma y tamaño', '👻 Ghost and size'],
+  opacity: ['Canto se ve (pantasma ↔ normal)', 'Cuánto se ve (fantasma ↔ normal)', 'How visible (ghost ↔ normal)'],
+  zoom: ['Tamaño (miniatura ↔ xigante)', 'Tamaño (miniatura ↔ gigante)', 'Size (tiny ↔ giant)'],
+  dragTip: ['Arrastra a imaxe co rato para movela', 'Arrastra la imagen con el ratón para moverla', 'Drag the picture with the mouse to move it'],
+  reset: ['↩ Como estaba', '↩ Como estaba', '↩ Reset'],
+
+  cardFilter: ['🎨 Cores', '🎨 Colores', '🎨 Colours'],
+  f_none: ['Normal', 'Normal', 'Normal'],
+  f_bw: ['Branco e negro', 'Blanco y negro', 'Black & white'],
+  f_sepia: ['Sepia', 'Sepia', 'Sepia'],
+  f_neg: ['Negativo', 'Negativo', 'Negative'],
+  f_comic: ['Cómic', 'Cómic', 'Comic'],
+
+  cardStickers: ['⭐ Adhesivos e texto', '⭐ Pegatinas y texto', '⭐ Stickers and text'],
+  textPh: ['Escribe aquí', 'Escribe aquí', 'Type here'],
+  addText: ['➕ Poñer texto', '➕ Poner texto', '➕ Add text'],
+  itemSize: ['Tamaño', 'Tamaño', 'Size'],
+  delItem: ['🗑 Borrar o escollido', '🗑 Borrar lo elegido', '🗑 Delete selected'],
+  addSticker: ['Poñer o adhesivo {s}', 'Poner la pegatina {s}', 'Add sticker {s}'],
+
+  cardSound: ['🔊 Son', '🔊 Sonido', '🔊 Sound'],
+  recVoice: ['🎤 Gravar a voz', '🎤 Grabar la voz', '🎤 Record your voice'],
+  recStop: ['⏹ Parar de gravar', '⏹ Parar de grabar', '⏹ Stop recording'],
+  sfxTip: ['Os sons póñense onde está a liña vermella', 'Los sonidos se ponen donde está la línea roja', 'Sounds go where the red line is'],
+  delSound: ['🗑 Borrar o son escollido', '🗑 Borrar el sonido elegido', '🗑 Delete selected sound'],
+  s_boing: ['Boing', 'Boing', 'Boing'],
+  s_pop: ['Pop', 'Pop', 'Pop'],
+  s_laser: ['Láser', 'Láser', 'Laser'],
+  s_whoosh: ['Fiuuu', 'Fiuuu', 'Whoosh'],
+  s_drum: ['Tambor', 'Tambor', 'Drum'],
+  s_ding: ['Campá', 'Campana', 'Bell'],
+  s_voice: ['Voz', 'Voz', 'Voice'],
+
+  sm_title: ['📸 Stop motion', '📸 Stop motion', '📸 Stop motion'],
+  sm_capture: ['📷 Foto!', '📷 ¡Foto!', '📷 Snap!'],
+  sm_undo: ['↩ Borrar a última', '↩ Borrar la última', '↩ Delete last'],
+  sm_fps: ['Fotos por segundo', 'Fotos por segundo', 'Photos per second'],
+  sm_files: ['📁 Escoller fotos do ordenador', '📁 Elegir fotos del ordenador', '📁 Choose photos from the computer'],
+  sm_use: ['✅ Usar ({n})', '✅ Usar ({n})', '✅ Use ({n})'],
+  sm_name: ['Stop motion', 'Stop motion', 'Stop motion'],
+
+  st_preparing: ['Preparando…', 'Preparando…', 'Getting ready…'],
+  st_saving: ['Gardando… {p} %', 'Guardando… {p} %', 'Saving… {p}%'],
+  st_done: ['Listo! ({mb} MB)', '¡Listo! ({mb} MB)', 'Done! ({mb} MB)'],
+  st_doneMute: ['Listo! ({mb} MB, sen son)', '¡Listo! ({mb} MB, sin sonido)', 'Done! ({mb} MB, no sound)'],
+  err_open: ['Este navegador non sabe ler «{name}». Proba con outro ficheiro (MP4 ou WebM).',
+    'Este navegador no sabe leer «{name}». Prueba con otro archivo (MP4 o WebM).',
+    'This browser cannot read “{name}”. Try another file (MP4 or WebM).'],
+  err_decode: ['Este navegador non pode ler «{name}» fotograma a fotograma.',
+    'Este navegador no puede leer «{name}» fotograma a fotograma.',
+    'This browser cannot read “{name}” frame by frame.'],
+  err_encode: ['Este navegador non pode crear vídeos.', 'Este navegador no puede crear vídeos.', 'This browser cannot create videos.'],
+  err_save: ['Non se puido gardar: {msg}', 'No se pudo guardar: {msg}', 'Could not save: {msg}'],
+  err_cam: ['Non se pode usar a cámara. Podes escoller fotos do ordenador.',
+    'No se puede usar la cámara. Puedes elegir fotos del ordenador.',
+    'The camera cannot be used. You can choose photos from the computer.'],
+  err_mic: ['Non se pode usar o micrófono.', 'No se puede usar el micrófono.', 'The microphone cannot be used.'],
+  err_freeze: ['Non se puido conxelar a imaxe.', 'No se pudo congelar la imagen.', 'Could not freeze the picture.'],
+};
+
+// Receitas paso a paso. Cada texto: [galego, castelán, inglés].
+const TRICKS = [
+  {
+    title: ['🧦 A man invisible (co calcetín verde)', '🧦 La mano invisible (con el calcetín verde)', '🧦 The invisible hand (with a green sock)'],
+    steps: [
+      ['Pon a cámara nun trípode ou ben apoiada, para que non se mova nada.', 'Pon la cámara en un trípode o bien apoyada, para que no se mueva nada.', 'Put the camera on a tripod or rest it somewhere so it does not move at all.'],
+      ['Grava o sitio baleiro, sen ninguén (tamén vale unha foto).', 'Graba el sitio vacío, sin nadie (también vale una foto).', 'Film the empty place, with nobody in it (a photo works too).'],
+      ['Sen mover a cámara, grava a escena co calcetín verde posto na man.', 'Sin mover la cámara, graba la escena con el calcetín verde puesto en la mano.', 'Without moving the camera, film the scene wearing the green sock on your hand.'],
+      ['Preme ➕ en «Fondo» e escolle o sitio baleiro.', 'Pulsa ➕ en «Fondo» y elige el sitio vacío.', 'Press ➕ on “Background” and choose the empty place.'],
+      ['Preme ➕ en «Enriba» e escolle a toma do calcetín.', 'Pulsa ➕ en «Encima» y elige la toma del calcetín.', 'Press ➕ on “On top” and choose the take with the sock.'],
+      ['Toca ese anaco na liña de tempo e, en Efectos, preme 🟩 Croma.', 'Toca ese trozo en la línea de tiempo y, en Efectos, pulsa 🟩 Croma.', 'Tap that clip on the timeline and, in Effects, press 🟩 Green screen.'],
+      ['Preme 🎯 e toca o calcetín no vídeo. A man desaparece!', 'Pulsa 🎯 y toca el calcetín en el vídeo. ¡La mano desaparece!', 'Press 🎯 and tap the sock in the video. The hand vanishes!'],
+      ['Se aínda se ve algo verde, sobe «Canto borra».', 'Si aún se ve algo verde, sube «Cuánto borra».', 'If you can still see some green, turn up “How much it erases”.'],
+    ],
+  },
+  {
+    title: ['👯 Clónate: fala contigo mesmo', '👯 Clónate: habla contigo mismo', '👯 Clone yourself: talk to yourself'],
+    steps: [
+      ['Pon a cámara fixa, sen movela entre toma e toma.', 'Pon la cámara fija, sin moverla entre toma y toma.', 'Keep the camera still; do not move it between takes.'],
+      ['Grava a primeira toma colocándote na metade esquerda da imaxe.', 'Graba la primera toma colocándote en la mitad izquierda de la imagen.', 'Film the first take standing in the left half of the picture.'],
+      ['Grava a segunda toma colocándote na metade dereita.', 'Graba la segunda toma colocándote en la mitad derecha.', 'Film the second take standing in the right half.'],
+      ['Pon a primeira toma en «Fondo» e a segunda en «Enriba».', 'Pon la primera toma en «Fondo» y la segunda en «Encima».', 'Put the first take on “Background” and the second on “On top”.'],
+      ['Toca o anaco de «Enriba» e, en Efectos, preme 👯 Pantalla dividida.', 'Toca el trozo de «Encima» y, en Efectos, pulsa 👯 Pantalla dividida.', 'Tap the clip on “On top” and, in Effects, press 👯 Split screen.'],
+      ['Move a liña ata que non se note a unión.', 'Mueve la línea hasta que no se note la unión.', 'Move the line until you cannot see the join.'],
+    ],
+  },
+  {
+    title: ['✨ Aparecer e desaparecer', '✨ Aparecer y desaparecer', '✨ Appear and vanish'],
+    steps: [
+      ['Pon a cámara fixa.', 'Pon la cámara fija.', 'Keep the camera still.'],
+      ['Grava unha toma coa persoa ou o obxecto.', 'Graba una toma con la persona o el objeto.', 'Film one take with the person or the object.'],
+      ['Sen mover a cámara, grava outra toma sen el.', 'Sin mover la cámara, graba otra toma sin él.', 'Without moving the camera, film another take without it.'],
+      ['Pon as dúas tomas seguidas na mesma pista.', 'Pon las dos tomas seguidas en la misma pista.', 'Put the two takes one after the other on the same track.'],
+      ['Se sobra algo, leva a liña vermella alí, preme ✂ Cortar aquí e borra o que sobra con 🗑.', 'Si sobra algo, lleva la línea roja allí, pulsa ✂ Cortar aquí y borra lo que sobra con 🗑.', 'If there is a bit too much, move the red line there, press ✂ Cut here and delete the extra bit with 🗑.'],
+    ],
+  },
+  {
+    title: ['🔍 Xigantes e miniaturas', '🔍 Gigantes y miniaturas', '🔍 Giants and miniatures'],
+    steps: [
+      ['Grava alguén diante dunha tea ou dunha parede verde.', 'Graba a alguien delante de una tela o una pared verde.', 'Film someone in front of a green cloth or wall.'],
+      ['Pon unha paisaxe en «Fondo» e a toma verde en «Enriba».', 'Pon un paisaje en «Fondo» y la toma verde en «Encima».', 'Put a landscape on “Background” and the green take on “On top”.'],
+      ['Toca o anaco de «Enriba», preme 🟩 Croma e, con 🎯, toca o verde.', 'Toca el trozo de «Encima», pulsa 🟩 Croma y, con 🎯, toca el verde.', 'Tap the clip on “On top”, press 🟩 Green screen and, with 🎯, tap the green.'],
+      ['Preme 🔍 Tamaño e faino moi grande ou moi pequeno.', 'Pulsa 🔍 Tamaño y hazlo muy grande o muy pequeño.', 'Press 🔍 Size and make it very big or very small.'],
+      ['Arrastra a imaxe para colocalo onde queiras.', 'Arrastra la imagen para colocarlo donde quieras.', 'Drag the picture to put it wherever you like.'],
+    ],
+  },
+  {
+    title: ['👻 Pantasma', '👻 Fantasma', '👻 Ghost'],
+    steps: [
+      ['Coa cámara fixa, grava o sitio baleiro e pono en «Fondo».', 'Con la cámara fija, graba el sitio vacío y ponlo en «Fondo».', 'With the camera still, film the empty place and put it on “Background”.'],
+      ['Sen mover a cámara, grava a persoa que fai de pantasma e pona en «Enriba».', 'Sin mover la cámara, graba a la persona que hace de fantasma y ponla en «Encima».', 'Without moving the camera, film the person playing the ghost and put it on “On top”.'],
+      ['Toca ese anaco e, en Efectos, preme 👻 Pantasma.', 'Toca ese trozo y, en Efectos, pulsa 👻 Fantasma.', 'Tap that clip and, in Effects, press 👻 Ghost.'],
+      ['Baixa «Canto se ve» ata que se vexa a través del.', 'Baja «Cuánto se ve» hasta que se vea a través de él.', 'Turn down “How visible” until you can see through it.'],
+    ],
+  },
+];
+
+const ORDER = ['gl', 'es', 'en'];
+let lang = 'gl';
+const listeners = [];
+
+try {
+  const saved = localStorage.getItem('cromanenos.lang');
+  if (saved && LANGS[saved]) lang = saved;
+} catch { /* sen almacenamento: quédase en galego */ }
+
+export const getLang = () => lang;
+
+export function t(key, vars) {
+  const row = D[key];
+  let s = row ? row[ORDER.indexOf(lang)] : key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v);
+  return s;
+}
+
+export function tricks() {
+  const i = ORDER.indexOf(lang);
+  return TRICKS.map((r) => ({ title: r.title[i], steps: r.steps.map((s) => s[i]) }));
+}
+
+// Erro cunha mensaxe traducible.
+export function tErr(key, vars) {
+  return Object.assign(new Error(key), { i18n: [key, vars] });
+}
+
+export function applyI18n(root = document) {
+  document.documentElement.lang = lang;
+  root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+  root.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  root.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+}
+
+export function onLangChange(fn) { listeners.push(fn); }
+
+export function setLang(l) {
+  if (!LANGS[l]) return;
+  lang = l;
+  try { localStorage.setItem('cromanenos.lang', l); } catch { /* ignórase */ }
+  applyI18n();
+  listeners.forEach((fn) => fn());
+}
