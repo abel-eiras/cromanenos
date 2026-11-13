@@ -1,3 +1,5 @@
+<p align="center"><img src="icons/logo.png" alt="Logo de Cromanenos" width="180"></p>
+
 # Cromanenos
 
 Editor de vídeo moi sinxelo para nenas e nenos de primaria, con efectos especiais: croma, pantalla dividida para «clonarse», pantasmas, xigantes e miniaturas, marcha atrás, stop motion e máis.
@@ -23,6 +25,8 @@ Descarga o ZIP da [última versión](https://github.com/abel-eiras/cromanenos/re
 2. Ábrese unha xanela negra e, de seguido, o navegador con Cromanenos.
 3. Non peches a xanela negra mentres o uses. Para rematar, péchaa.
 
+A primeira vez que o arrancas créase no cartafol un atallo **Cromanenos** coa icona. A partir de aí podes usar ese atallo, ou copialo ao escritorio.
+
 Se Windows amosa o aviso «Windows protexeu o seu PC», preme en «Máis información» e despois en «Executar de todas as formas». Non fai falta instalar nada: úsase o PowerShell que xa trae Windows.
 
 ### Linux
@@ -37,6 +41,8 @@ Se Windows amosa o aviso «Windows protexeu o seu PC», preme en «Máis informa
 3. Para rematar, preme `Ctrl+C` no terminal.
 
 Só fai falta `python3`, que xa vén na maioría das distribucións.
+
+A primeira vez que o arrancas créase no cartafol un lanzador **Cromanenos** coa icona, que podes abrir con dobre clic ou copiar ao escritorio. Segundo o escritorio, a primeira vez pode pedir que confirmes que queres executalo.
 
 ### Navegador
 
@@ -110,10 +116,15 @@ Non hai paso de compilación: son módulos de JavaScript servidos tal cal.
 |---|---|
 | `index.html`, `style.css` | A páxina |
 | `js/` | O código: modelo da liña de tempo, compositor WebGL, previsualización, exportación, son, stop motion, idiomas |
+| `icons/` | A icona do lanzador e do navegador, feitas a partir de `logo.jpeg` |
 | `vendor/` | [Mediabunny](https://mediabunny.dev/) 1.66.0, para ler e escribir MP4 |
 | `tools/serve.py`, `tools/serve.ps1` | Servidores locais de ficheiros estáticos |
 
 Para as probas automáticas, `python3 tools/serve.py 8766 --no-csp` arranca o servidor sen a política de seguridade, o que permite cargar os vídeos de `test-media/` por código. Ese modo é só para desenvolver.
+
+## Licenza
+
+Cromanenos é software libre baixo a [licenza MIT](LICENSE).
 
 ## Créditos
 

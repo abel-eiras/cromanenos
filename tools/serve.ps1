@@ -17,6 +17,20 @@ $mime = @{
   '.mp4'  = 'video/mp4'
 }
 
+# Atallo "Cromanenos" coa icona, neste mesmo cartafol. Refaise en cada arranque
+# para que siga valendo se se move o cartafol. Pode copiarse ao escritorio.
+try {
+  $shell = New-Object -ComObject WScript.Shell
+  $link = $shell.CreateShortcut((Join-Path $root 'Cromanenos.lnk'))
+  $link.TargetPath = Join-Path $root 'iniciar.bat'
+  $link.WorkingDirectory = $root
+  $link.IconLocation = Join-Path $root 'icons\cromanenos.ico'
+  $link.Description = 'Cromanenos'
+  $link.Save()
+} catch {
+  # Sen atallo tamen funciona.
+}
+
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:$Port/")
 try {
