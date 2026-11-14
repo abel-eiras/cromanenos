@@ -33,7 +33,20 @@ export async function loadMedia(file) {
     return { id: uid(), kind: 'video', name: file.name, file, url, w, h, dur };
   } catch {
     URL.revokeObjectURL(url);
+    // Os móbiles gravan ás veces en HEVC (H.265), que moitos navegadores non len.
+    if (!file.type.startsWith('image/') && await isHevc(file)) throw tErr('err_hevc', { name: file.name });
     throw tErr('err_open', { name: file.name });
+  }
+}
+
+async function isHevc(file) {
+  const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
+  try {
+    return (await input.getPrimaryVideoTrack())?.codec === 'hevc';
+  } catch {
+    return false;
+  } finally {
+    input.dispose();
   }
 }
 

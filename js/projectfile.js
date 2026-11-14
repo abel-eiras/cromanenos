@@ -27,7 +27,7 @@ function encodeCanvas(canvas, type, quality) {
   });
 }
 
-async function blobOfCanvas(canvas, type, quality) {
+export async function blobOfCanvas(canvas, type, quality) {
   let b = canvasBlobs.get(canvas);
   if (!b) {
     b = await encodeCanvas(canvas, type, quality);
@@ -36,7 +36,7 @@ async function blobOfCanvas(canvas, type, quality) {
   return b;
 }
 
-async function canvasFromBlob(blob) {
+export async function canvasFromBlob(blob) {
   let src, w, h;
   try {
     src = await createImageBitmap(blob);

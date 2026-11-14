@@ -36,9 +36,13 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 23rem; gap: 1rem; pa
 #viewWrap { width: 100%; max-width: 100%; margin: 0 auto; }
 #view { width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; display: block; touch-action: none; }
 /* Asa para cambiar o tamaño da vista */
-#viewHandle { height: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: ns-resize; touch-action: none; border-radius: 8px; }
-#viewHandle span { width: 4.5rem; height: .35rem; border-radius: 4px; background: var(--btn); }
-#viewHandle:hover span, #viewHandle:focus-visible span { background: var(--accent); }
+#viewHandle { height: 1.7rem; display: flex; align-items: center; justify-content: center; cursor: ns-resize; touch-action: none; border-radius: 8px; user-select: none; }
+#viewHandle span {
+  min-width: 7rem; padding: 0 .9rem; height: 1.25rem; line-height: 1.25rem; border-radius: 0 0 12px 12px; text-align: center;
+  background: var(--btn); color: var(--ink); font-weight: 700; font-size: .95rem; letter-spacing: .15em;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+}
+#viewHandle:hover span, #viewHandle:focus-visible span, #viewHandle:active span { background: var(--accent); color: var(--bg); }
 #viewHandle:focus-visible { outline: 2px solid var(--accent); }
 #view.picking { cursor: crosshair; outline: 4px dashed var(--accent); }
 .hint { margin: .3rem 0; color: var(--muted); font-size: .9rem; min-height: 1.2em; }
@@ -53,7 +57,7 @@ progress { flex: 1; height: 1.2rem; }
 
 /* ------------------------------------------------------------ liña de tempo */
 .timeline { margin-top: .75rem; display: flex; flex-direction: column; gap: .35rem; }
-.trow { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 6rem; gap: .5rem; align-items: center; }
+.trow { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 9rem; gap: .5rem; align-items: center; }
 .tlabel { font-size: .85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .strip { position: relative; height: 3.2rem; background: #151a29; border-radius: 8px; overflow: hidden; cursor: pointer; }
 .trow.thin .strip { height: 2.1rem; }
@@ -136,3 +140,26 @@ ol { margin: .5rem 0 0; padding-left: 1.4rem; line-height: 1.5; }
 .smstrip { display: flex; gap: .25rem; overflow-x: auto; min-height: 3.6rem; margin: .5rem 0; }
 .smstrip canvas { border-radius: 4px; flex: none; }
 #smDialog .row { margin-top: .5rem; }
+
+/* ------------------------------------------------- anacos: miniatura e arrastre */
+.strip.clips { overflow: visible; }
+.block { position: relative; touch-action: none; cursor: grab; background-size: auto 100%; background-repeat: no-repeat; background-position: left center; }
+.block .bname { background: rgba(255, 255, 255, .72); border-radius: 6px; padding: 0 .25rem; }
+.block.dragging { z-index: 5; opacity: .85; cursor: grabbing; box-shadow: 0 6px 16px rgba(0, 0, 0, .5); }
+.block .grip { position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; }
+.block .grip.l { left: 0; border-radius: 4px 0 0 4px; }
+.block .grip.r { right: 0; border-radius: 0 4px 4px 0; }
+.block:hover .grip, .block.sel .grip { background: rgba(255, 255, 255, .75); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35); }
+.strip.filedrop, .strip.clipdrop { outline: 3px dashed var(--accent); outline-offset: 1px; }
+#view.filedrop { outline: 4px dashed var(--accent); }
+.ins { position: absolute; top: -3px; bottom: -3px; width: 5px; margin-left: -2px; border-radius: 3px; background: var(--accent); z-index: 6; pointer-events: none; }
+
+/* ------------------------------------------------------------------ cámara */
+.smview #camPlay { object-fit: contain; }
+.camcount {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 9rem; font-weight: 800; color: #fff; text-shadow: 0 4px 18px rgba(0, 0, 0, .7); pointer-events: none;
+}
+.camtime { position: absolute; top: .6rem; left: .6rem; padding: .15rem .6rem; border-radius: 8px; background: rgba(200, 30, 30, .9); color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
+button.try { align-self: flex-start; margin-top: .6rem; background: var(--go); color: var(--bg); font-weight: 700; }
+#undoBtn, #redoBtn { min-width: 2.6rem; }

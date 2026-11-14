@@ -196,7 +196,7 @@ export async function mixProject(D) {
   for (const tr of project.tracks) {
     let start = 0;
     for (const c of tr.clips) {
-      const buf = await mediaAudio(c.media);
+      const buf = c.fx.mute ? null : await mediaAudio(c.media);
       if (buf) {
         const src = ctx.createBufferSource();
         const speed = speedOf(c);

@@ -22,6 +22,10 @@
     <button id="pjSave" data-i18n="pj_save"></button>
     <button id="pjSaveAs" data-i18n="pj_saveAs"></button>
   </div>
+  <div class="proj" role="group">
+    <button id="undoBtn" disabled data-i18n="undo" data-i18n-title="undoTip"></button>
+    <button id="redoBtn" disabled data-i18n="redo" data-i18n-title="redoTip"></button>
+  </div>
   <span class="spacer"></span>
   <p class="privacy" data-i18n="privacy"></p>
   <button id="openTricks" class="big" data-i18n="tricks"></button>
@@ -39,7 +43,7 @@
       <canvas id="view" width="1280" height="720" role="img" data-i18n-aria="preview"></canvas>
       <div id="viewHandle" role="slider" tabindex="0" aria-orientation="vertical"
            aria-valuemin="25" aria-valuemax="100" aria-valuenow="100"
-           data-i18n-aria="resize" data-i18n-title="resize"><span></span></div>
+           data-i18n-aria="resize" data-i18n-title="resize"><span aria-hidden="true">⋯ ↕ ⋯</span></div>
     </div>
     <p id="hint" class="hint"></p>
 
@@ -55,6 +59,7 @@
         <div class="strip clips" id="strip1" data-track="1"></div>
         <div class="tadd">
           <label class="file" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="1"></label>
+          <button data-cam="1" data-i18n-title="addCam" data-i18n-aria="addCam">🎥</button>
           <button data-stop="1" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
         </div>
       </div>
@@ -63,6 +68,7 @@
         <div class="strip clips" id="strip0" data-track="0"></div>
         <div class="tadd">
           <label class="file" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="0"></label>
+          <button data-cam="0" data-i18n-title="addCam" data-i18n-aria="addCam">🎥</button>
           <button data-stop="0" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
         </div>
       </div>
@@ -93,10 +99,9 @@
       <div class="tools">
         <button id="opSplit" data-i18n="split"></button>
         <button id="opFreeze" data-i18n="freeze"></button>
-        <button id="opLeft" data-i18n="moveLeft"></button>
-        <button id="opRight" data-i18n="moveRight"></button>
         <button id="opDel" data-i18n="del"></button>
       </div>
+      <p id="dragHint" class="hint" data-i18n="dragHint"></p>
       <label id="stillRow" hidden><span data-i18n="stillDur"></span>
         <input id="stillDur" type="range" min="0.5" max="10" step="0.5" value="3">
       </label>
@@ -182,6 +187,34 @@
 </dialog>
 
 <input id="pjFile" type="file" accept=".cromanenos" hidden>
+
+<dialog id="recoverDialog">
+  <h2 data-i18n="rc_title"></h2>
+  <p id="rcText"></p>
+  <div class="row end">
+    <button id="rcNo" data-i18n="rc_no"></button>
+    <button id="rcYes" class="big go" data-i18n="rc_yes"></button>
+  </div>
+</dialog>
+
+<dialog id="camDialog">
+  <h2 data-i18n="cam_title"></h2>
+  <div id="camView" class="smview">
+    <video id="camVideo" autoplay playsinline muted></video>
+    <video id="camPlay" controls playsinline hidden></video>
+    <div id="camCount" class="camcount" hidden></div>
+    <div id="camTime" class="camtime" hidden></div>
+  </div>
+  <p id="camMsg" class="hint" role="status"></p>
+  <div class="row">
+    <button id="camRec" class="big go"></button>
+    <button id="camRetry" data-i18n="cam_retry" hidden></button>
+  </div>
+  <div class="row end">
+    <button id="camCancel" data-i18n="cancel"></button>
+    <button id="camUse" class="big go" data-i18n="cam_use" hidden></button>
+  </div>
+</dialog>
 
 <dialog id="tricksDialog">
   <h2 data-i18n="tricks"></h2>

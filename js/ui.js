@@ -2,8 +2,8 @@
 // diálogos e idioma.
 import { t, tricks, setLang, getLang, applyI18n, onLangChange, LANGS } from './i18n.js';
 import {
-  W, H, FREEZE_SECONDS, FX_DEFAULTS, FX_ORDER, project, ui, uid, duration, trackAt, srcTime,
-  clipDur, clipStart, findClip, splitClip, removeClip, moveClip, insertClip, makeClip,
+  W, H, FPS, FREEZE_SECONDS, FX_DEFAULTS, FX_ORDER, project, ui, uid, duration, trackAt, srcTime,
+  clipDur, clipStart, findClip, splitClip, removeClip, moveClip, insertClip, makeClip, trimClip, placeClip,
 } from './model.js';
 import { loadMedia, grabFrame, mediaFromCanvas, mediaFromFrames } from './media.js';
 import * as preview from './preview.js';
@@ -14,6 +14,10 @@ import { initStopMotion, openStopMotion, retranslate as retranslateStopMotion } 
 import { readColor, invalidate } from './compositor.js';
 import * as projects from './projects.js';
 import * as updates from './updates.js';
+import * as history from './history.js';
+import * as recovery from './recovery.js';
+import * as camera from './camera.js';
+import { thumbOf, keyOf as thumbKey } from './thumbs.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -30,7 +34,7 @@ function el(tag, props = {}, ...kids) {
   return e;
 }
 
-const FX_ICON = { chroma: '🟩', split: '👯', ghost: '👻', size: '🔍', mirror: '🪞', filter: '🎨', speed: '⏩', reverse: '⏪' };
+const FX_ICON = { chroma: '🟩', split: '👯', ghost: '👻', size: '🔍', mirror: '🪞', filter: '🎨', speed: '⏩', reverse: '⏪', mute: '🔇' };
 const NEEDS_BELOW = ['chroma', 'split', 'ghost', 'size']; // mesturan co que hai debaixo
 const KIND_ICON = { video: '🎞', image: '🖼', frames: '📸' };
 const STICKERS = ['⭐', '❤️', '😂', '😎', '😱', '👻', '💥', '🔥', '🎩', '👑', '💬', '🌈', '🦄', '🐱', '🚀', '❓'];
@@ -92,7 +96,29 @@ function renderProjectBar() {
   document.title = `${dirty ? '• ' : ''}${name} – Cromanenos`;
   const busy = ui.exporting || projects.state.busy;
   for (const id of ['pjNew', 'pjOpen', 'pjSave', 'pjSaveAs']) $(id).disabled = busy;
+  $('undoBtn').disabled = busy || !history.canUndo();
+  $('redoBtn').disabled = busy || !history.canRedo();
 }
+
+// ------------------------------------------------------- desfacer e refacer
+// Rematou un xesto: anótase para poder desfacelo e para a recuperación.
+function commit() {
+  if (history.commit()) recovery.schedule();
+}
+
+function afterHistory() {
+  preview.pause();
+  if (ui.picking) { ui.picking = false; canvas.classList.remove('picking'); }
+  overlay.markDirty();
+  invalidate();
+  preview.forgetUnused();
+  preview.seek(ui.t);
+  recovery.schedule();
+  refresh();
+}
+
+function doUndo() { return !(ui.exporting || projects.state.busy) && history.undo(); }
+function doRedo() { return !(ui.exporting || projects.state.busy) && history.redo(); }
 
 function confirmDiscard() {
   return new Promise((res) => {
@@ -279,11 +305,176 @@ function dragInTime(block, obj, strip) {
       block.removeEventListener('pointermove', move);
       block.removeEventListener('pointerup', up);
       block.removeEventListener('pointercancel', up);
+      if (moved) setTimeout(refresh, 0); // pode cambiar canto dura o vídeo
     };
     block.addEventListener('pointermove', move);
     block.addEventListener('pointerup', up);
     block.addEventListener('pointercancel', up);
   });
+}
+
+// ----------------------------------------------- anacos: miniatura e arrastre
+function paintThumb(b, url) {
+  b.style.backgroundImage = `url("${url}")`;
+  b.style.backgroundSize = 'auto 100%';
+  b.style.backgroundRepeat = 'no-repeat';
+}
+
+function onThumb(key, url) {
+  document.querySelectorAll('.block').forEach((b) => { if (b.dataset.thumb === key) paintThumb(b, url); });
+}
+
+function setBlockWidths() {
+  const D = duration() || 1;
+  document.querySelectorAll('.block').forEach((b) => {
+    const f = findClip(+b.dataset.clip);
+    if (f) b.style.flex = `0 0 ${(clipDur(f.clip) / D) * 100}%`;
+  });
+}
+
+// Onde caería un anaco soltado nese punto: { ti, idx, x } ou null.
+function dropSpot(x, y, dragged) {
+  for (const ti of [1, 0]) {
+    const strip = $(`strip${ti}`);
+    const r = strip.getBoundingClientRect();
+    if (y < r.top - 8 || y > r.bottom + 8) continue;
+    const blocks = [...strip.querySelectorAll('.block')].filter((b) => b !== dragged);
+    let idx = 0;
+    let left = 0;
+    for (const b of blocks) {
+      const br = b.getBoundingClientRect();
+      if (x > br.left + br.width / 2) { idx++; left = br.right - r.left; }
+    }
+    if (idx === 0 && blocks.length) left = blocks[0].getBoundingClientRect().left - r.left;
+    return { ti, idx, left, strip };
+  }
+  return null;
+}
+
+function clearDropMarks() {
+  document.querySelectorAll('.ins').forEach((e) => e.remove());
+  document.querySelectorAll('.clipdrop').forEach((e) => e.classList.remove('clipdrop'));
+}
+
+let suppressClick = false;
+
+// Arrastrar un anaco: polo medio cámbiase de sitio (ou de pista); polos
+// bordos recórtase.
+function clipPointer(b, c) {
+  b.addEventListener('pointerdown', (ev) => {
+    if (ui.exporting || projects.state.busy || ev.button > 0) return;
+    const r = b.getBoundingClientRect();
+    const stripW = b.parentElement.getBoundingClientRect().width;
+    const D0 = duration() || 1;
+    const edgeW = Math.min(12, r.width / 3);
+    const edge = ev.clientX - r.left <= edgeW ? 'l' : r.right - ev.clientX <= edgeW ? 'r' : null;
+    const x0 = ev.clientX, y0 = ev.clientY;
+    const base = { in: c.in, out: c.out };
+    let mode = null;
+    try { b.setPointerCapture(ev.pointerId); } catch { /* punteiro sen captura */ }
+
+    const move = (e) => {
+      const dx = e.clientX - x0, dy = e.clientY - y0;
+      if (!mode) {
+        if (Math.hypot(dx, dy) < 6) return;
+        mode = edge ? 'trim' : 'move';
+        preview.pause();
+        if (ui.picking) setPicking(false);
+        if (mode === 'move') b.classList.add('dragging');
+      }
+      if (mode === 'trim') {
+        trimClip(c, edge, (dx / stripW) * D0, base);
+        setBlockWidths();
+        // Vese o fotograma onde queda o corte.
+        const f = findClip(c.id);
+        const st = clipStart(f.ti, c);
+        ui.t = edge === 'l' ? st : st + Math.max(0, clipDur(c) - 1 / FPS);
+        updatePlayheads();
+      } else {
+        b.style.transform = `translate(${dx}px, ${dy}px)`;
+        clearDropMarks();
+        const d = dropSpot(e.clientX, e.clientY, b);
+        if (d) {
+          d.strip.classList.add('clipdrop');
+          const ins = el('div', { class: 'ins' });
+          ins.style.left = `${d.left}px`;
+          d.strip.append(ins);
+        }
+      }
+    };
+    const up = (e) => {
+      b.removeEventListener('pointermove', move);
+      b.removeEventListener('pointerup', up);
+      b.removeEventListener('pointercancel', up);
+      if (!mode) return; // foi un toque: escóllese co clic de sempre
+      b.classList.remove('dragging');
+      b.style.transform = '';
+      clearDropMarks();
+      if (mode === 'move' && e.type === 'pointerup') {
+        const d = dropSpot(e.clientX, e.clientY, b);
+        if (d) placeClip(c.id, d.ti, d.idx);
+      }
+      ui.sel = { type: 'clip', id: c.id };
+      suppressClick = true;
+      setTimeout(() => {
+        suppressClick = false;
+        preview.forgetUnused();
+        preview.seek(ui.t);
+        refresh();
+      }, 0);
+    };
+    b.addEventListener('pointermove', move);
+    b.addEventListener('pointerup', up);
+    b.addEventListener('pointercancel', up);
+  });
+}
+
+// Mover o anaco escollido co teclado (Alt + frechas).
+function nudgeClip(key) {
+  const s = selClip();
+  if (!s || ui.exporting) return false;
+  if (key === 'ArrowLeft') moveClip(s.clip.id, -1);
+  else if (key === 'ArrowRight') moveClip(s.clip.id, 1);
+  else if (key === 'ArrowUp' && s.ti === 0) placeClip(s.clip.id, 1, s.idx);
+  else if (key === 'ArrowDown' && s.ti === 1) placeClip(s.clip.id, 0, s.idx);
+  else return false;
+  preview.forgetUnused();
+  preview.seek(ui.t);
+  refresh();
+  return true;
+}
+
+// ------------------------------------------------- soltar ficheiros do escritorio
+async function dropFiles(ti, files) {
+  const pj = files.find((f) => f.name.toLowerCase().endsWith('.cromanenos'));
+  if (pj) return projects.openDropped(pj);
+  const ok = files.filter((f) => /^(video|image)\//.test(f.type));
+  return ok.length ? addFiles(ti, ok) : null;
+}
+
+function initDrops() {
+  const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
+  // Fóra das zonas de soltar, que o navegador non abra o ficheiro e marche da páxina.
+  window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+  window.addEventListener('drop', (e) => { if (hasFiles(e)) e.preventDefault(); });
+  const zone = (elm, trackOf) => {
+    elm.addEventListener('dragover', (e) => {
+      if (!hasFiles(e) || ui.exporting) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      elm.classList.add('filedrop');
+    });
+    elm.addEventListener('dragleave', () => elm.classList.remove('filedrop'));
+    elm.addEventListener('drop', (e) => {
+      elm.classList.remove('filedrop');
+      if (!hasFiles(e) || ui.exporting) return;
+      e.preventDefault();
+      dropFiles(trackOf(), [...e.dataTransfer.files]);
+    });
+  };
+  zone($('strip0'), () => 0);
+  zone($('strip1'), () => 1);
+  zone(canvas, () => (project.tracks[0].clips.length ? 1 : 0));
 }
 
 function renderTimeline() {
@@ -296,11 +487,21 @@ function renderTimeline() {
       const b = el('button', {
         class: `block${ui.sel?.type === 'clip' && ui.sel.id === c.id ? ' sel' : ''}`,
         title: c.media.name,
-        onclick: () => select('clip', c.id),
+        onclick: (ev) => {
+          if (suppressClick) { ev.stopPropagation(); return; }
+          select('clip', c.id);
+        },
       },
+      el('span', { class: 'grip l' }),
       el('span', { class: 'bname', text: `${KIND_ICON[c.media.kind]} ${c.media.name}` }),
-      chips && el('span', { class: 'chips', text: chips }));
+      chips && el('span', { class: 'chips', text: chips }),
+      el('span', { class: 'grip r' }));
+      b.dataset.clip = c.id;
+      b.dataset.thumb = thumbKey(c);
       b.style.flex = `0 0 ${(clipDur(c) / D) * 100}%`;
+      const thumb = thumbOf(c, onThumb);
+      if (thumb) paintThumb(b, thumb);
+      clipPointer(b, c);
       strip.append(b);
     }
     strip.append(el('div', { class: 'ph' }));
@@ -342,8 +543,6 @@ function renderClipCard() {
   const target = targetAtPlayhead();
   $('opSplit').disabled = busy || !target;
   $('opFreeze').disabled = busy || !target;
-  $('opLeft').disabled = busy || !s || s.idx === 0;
-  $('opRight').disabled = busy || !s || s.idx === project.tracks[s.ti].clips.length - 1;
   $('opDel').disabled = busy || !s;
   const still = s && s.clip.media.kind === 'image';
   $('stillRow').hidden = !still;
@@ -441,6 +640,8 @@ function fxSection(s, k) {
     }))));
   } else if (k === 'reverse') {
     info('reverseInfo');
+  } else if (k === 'mute') {
+    info('muteInfo');
   }
   if (s.ti === 0 && NEEDS_BELOW.includes(k)) sec.append(el('p', { class: 'hint warn', text: t('fxBottomHint') }));
   return sec;
@@ -452,7 +653,8 @@ function renderFx() {
   const still = s && s.clip.media.kind === 'image';
   $('fxPalette').replaceChildren(...FX_ORDER.map((k) => el('button', {
     class: `fxbtn${s && s.clip.fx[k] ? ' on' : ''}`,
-    disabled: !s || ui.exporting || (still && (k === 'speed' || k === 'reverse')),
+    disabled: !s || ui.exporting || (still && (k === 'speed' || k === 'reverse'))
+      || (k === 'mute' && s.clip.media.kind !== 'video'),
     onclick: () => addFx(k),
   }, el('span', { class: 'ico', text: FX_ICON[k] }), el('span', { text: t(`fx_${k}`) }))));
   $('fxList').replaceChildren(...(s ? FX_ORDER.filter((k) => s.clip.fx[k]).map((k) => fxSection(s, k)) : []));
@@ -531,7 +733,7 @@ function initCanvas() {
       drag.size.y = drag.py + (y - drag.y0) / H;
     }
   });
-  const end = () => { drag = null; };
+  const end = () => { if (drag) commit(); drag = null; };
   canvas.addEventListener('pointerup', end);
   canvas.addEventListener('pointercancel', end);
 }
@@ -662,10 +864,113 @@ function renderStatic() {
   })));
   $('tricksBody').replaceChildren(...tricks().map((r, i) => el('details', { open: i === 0 },
     el('summary', { text: r.title }),
-    el('ol', {}, ...r.steps.map((step) => el('li', { text: step }))))));
+    el('ol', {}, ...r.steps.map((step) => el('li', { text: step }))),
+    examplesOk && EXAMPLES[i] && el('button', { class: 'try', text: t('ex_try'), onclick: () => loadExample(i) }))));
+}
+
+// ------------------------------------------------------- exemplos dos trucos
+// Cada truco pode probarse cuns vídeos de mostra (test-media/), co efecto xa
+// posto. [ficheiro, { out, fx }]
+const GREEN = { key: [32 / 255, 192 / 255, 48 / 255], tol: 0.22, soft: 0.1 };
+const EXAMPLES = [
+  { bottom: [['ex-sitio.mp4']], top: [['ex-calcetin.mp4', { fx: { chroma: GREEN } }]] },
+  { bottom: [['ex-monstro-esquerda.mp4']], top: [['ex-monstro-dereita.mp4', { fx: { split: { pos: 0.5, soft: 0.01 } } }]] },
+  { bottom: [['ex-sitio.mp4', { out: 1.5 }], ['ex-monstro-esquerda.mp4', { out: 2 }], ['ex-sitio.mp4', { out: 1.5 }]], top: [] },
+  { bottom: [['ex-paisaxe.png', { out: 4 }]], top: [['ex-verde.mp4', { fx: { chroma: GREEN, size: { zoom: 1.15, x: -0.12, y: 0.06 } } }]] },
+  { bottom: [['ex-sitio.mp4']], top: [['ex-monstro-dereita.mp4', { fx: { ghost: { opacity: 0.45 } } }]] },
+];
+let examplesOk = false;
+
+async function probeExamples() {
+  try {
+    examplesOk = (await fetch('test-media/ex-paisaxe.png', { cache: 'no-store' })).ok;
+  } catch {
+    examplesOk = false;
+  }
+  renderStatic();
+  return examplesOk;
+}
+
+async function loadExample(i) {
+  const ex = EXAMPLES[i];
+  if (!ex || ui.exporting || projects.state.busy) return false;
+  $('tricksDialog').close();
+  if (!(await projects.newProject())) return false; // pregunta se hai cambios sen gardar
+  try {
+    const loaded = new Map();
+    const get = async (name) => {
+      if (!loaded.has(name)) {
+        const r = await fetch(`test-media/${name}`);
+        if (!r.ok) throw new Error(name);
+        const blob = await r.blob();
+        const type = blob.type && blob.type !== 'application/octet-stream' ? blob.type : name.endsWith('.png') ? 'image/png' : 'video/mp4';
+        loaded.set(name, await loadMedia(new File([blob], name, { type })));
+      }
+      return loaded.get(name);
+    };
+    let pick = null;
+    for (const [ti, list] of [[0, ex.bottom], [1, ex.top]]) {
+      for (const [name, extra = {}] of list) {
+        const c = insertClip(ti, project.tracks[ti].clips.length, makeClip(await get(name), structuredClone(extra)));
+        if (ti === 1 || !pick) pick = c;
+      }
+    }
+    ui.sel = pick ? { type: 'clip', id: pick.id } : null;
+    history.reset();
+    projects.markClean(); // un exemplo non é traballo que haxa que gardar
+    refresh();
+    seekTo(Math.min(1, duration() / 2));
+    notify('ex_loaded');
+    return true;
+  } catch {
+    await projects.newProject({ force: true });
+    notify('ex_fail');
+    return false;
+  }
+}
+
+// ----------------------------------------------------- recuperación automática
+function askRecover(st) {
+  return new Promise((res) => {
+    const d = $('recoverDialog');
+    $('rcText').textContent = t('rc_text', { name: st.name || t('untitled') });
+    const done = (answer) => { d.close(); res(answer); };
+    $('rcYes').onclick = () => done(true);
+    $('rcNo').onclick = () => done(false);
+    d.oncancel = (e) => e.preventDefault(); // hai que escoller: Esc non decide por ninguén
+    d.showModal();
+  });
+}
+
+// Ao arrancar: se a última vez quedou traballo sen gardar, ofrécese seguir.
+async function startupRecovery(answer) {
+  await recovery.init({
+    isDirty: projects.isDirty,
+    name: () => projects.state.name,
+    keepKeys: history.keysInHistory,
+  });
+  const st = await recovery.peek();
+  let result = null;
+  if (st) {
+    const yes = answer ?? await askRecover(st);
+    const data = yes ? await recovery.restore(st) : null;
+    if (data) {
+      projects.adoptRecovered(data, st.name);
+      notify('rc_done');
+    } else {
+      await recovery.clear();
+      if (yes) notify('rc_fail');
+    }
+    result = !!data;
+  } else {
+    await recovery.clear(); // restos sen descrición: non valen para nada
+  }
+  recovery.arm();
+  return result;
 }
 
 export function refresh() {
+  commit();
   const D = duration();
   const busy = ui.exporting;
   if (ui.sel && !(selClip() || selItem() || selSound())) ui.sel = null;
@@ -673,6 +978,7 @@ export function refresh() {
   $('play').disabled = !D || busy;
   $('play').textContent = t(ui.playing ? 'pause' : 'play');
   $('seek').disabled = !D || busy;
+  if (!ui.playing) $('seek').value = D ? Math.round((ui.t / D) * 1000) : 0;
   $('export').disabled = !D || busy;
   $('rec').textContent = t(audio.isRecording() ? 'recStop' : 'recVoice');
   $('rec').classList.toggle('on', audio.isRecording());
@@ -718,6 +1024,9 @@ export function initUI(view) {
   canvas = view;
   initCanvas();
   initStopMotion();
+  camera.initCamera();
+  initDrops();
+  history.init({ restored: afterHistory });
 
   $('play').addEventListener('click', () => { if (ui.playing) preview.pause(); else preview.play(); refresh(); });
   $('seek').addEventListener('input', (e) => seekTo((e.target.value / 1000) * duration()));
@@ -737,11 +1046,19 @@ export function initUI(view) {
     preview.pause();
     openStopMotion(({ frames, fps }) => addFrames(+b.dataset.stop, frames, fps));
   }));
+  document.querySelectorAll('[data-cam]').forEach((b) => b.addEventListener('click', () => {
+    preview.pause();
+    camera.openCameraDialog((file) => addFiles(+b.dataset.cam, [file]));
+  }));
+  $('undoBtn').addEventListener('click', doUndo);
+  $('redoBtn').addEventListener('click', doRedo);
+  // Soltar un deslizador é o final dun xesto.
+  document.addEventListener('change', (e) => {
+    if (e.target.matches?.('input[type=range]')) { commit(); renderProjectBar(); }
+  });
 
   $('opSplit').addEventListener('click', splitHere);
   $('opFreeze').addEventListener('click', () => freezeHere());
-  $('opLeft').addEventListener('click', () => { moveClip(ui.sel.id, -1); refresh(); });
-  $('opRight').addEventListener('click', () => { moveClip(ui.sel.id, 1); refresh(); });
   $('opDel').addEventListener('click', deleteSelection);
   $('stillDur').addEventListener('input', (e) => {
     const s = selClip();
@@ -786,24 +1103,43 @@ export function initUI(view) {
       else projects.save();
       return;
     }
+    const typing = e.target.closest('input[type=text], textarea');
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && ['z', 'y'].includes(e.key.toLowerCase()) && !typing) {
+      e.preventDefault();
+      if (document.querySelector('dialog[open]')) return;
+      if (e.key.toLowerCase() === 'y' || e.shiftKey) doRedo(); else doUndo();
+      return;
+    }
     if (e.target.closest('input, textarea, dialog')) return;
+    if (e.altKey && e.key.startsWith('Arrow')) { if (nudgeClip(e.key)) e.preventDefault(); return; }
     if (e.key === 'Delete') deleteSelection();
   });
+  // Ao agochar ou pechar a pestana, gárdase xa o que haxa para recuperar.
+  document.addEventListener('visibilitychange', () => { if (document.hidden) recovery.flushNow(); });
+  window.addEventListener('pagehide', () => { recovery.flushNow(); });
   window.addEventListener('beforeunload', (e) => {
     if (projects.isDirty()) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  projects.init({ refresh, notify, confirmDiscard, pickFile, version: () => updates.info.version });
+  projects.init({
+    refresh, notify, confirmDiscard, pickFile, version: () => updates.info.version,
+    installed: () => { history.reset(); recovery.schedule(); },
+    saved: (toFile) => { if (toFile) history.keepOnly(projects.mediaNow()); recovery.forgetState(); },
+    cleared: () => { recovery.clear(); },
+  });
   // Os deslizadores cambian o proxecto sen repintar todo: revísase cada pouco.
   setInterval(renderProjectBar, 700);
   initViewSize();
 
-  onLangChange(() => { renderStatic(); retranslateStopMotion(); refresh(); });
+  onLangChange(() => { renderStatic(); retranslateStopMotion(); camera.retranslate(); refresh(); });
   preview.setOnTick(onTick);
   applyI18n();
   renderStatic();
   refresh();
   setTimeout(() => { startupUpdate().catch(() => {}); }, 1500);
+  probeExamples();
+  // Nas probas automáticas (?proba) a recuperación arráncase á man.
+  if (!new URLSearchParams(location.search).has('proba')) startupRecovery().catch(() => recovery.arm());
 }
 
 // Para as probas automáticas (e para xogar desde a consola).
@@ -812,4 +1148,6 @@ export const api = {
   deleteSelection, addOverlayItem, addSfx, exportVideo, setPicking, setLang, renderNow: preview.renderNow,
   moveClip: (id, dir) => { moveClip(id, dir); refresh(); },
   projects, updates, checkUpdates, applyUpdate, startupUpdate, setViewSize, notify,
+  history, recovery, camera, undo: doUndo, redo: doRedo, commit, startupRecovery, loadExample, probeExamples,
+  dropFiles, nudgeClip, trimClip, placeClip, duration,
 };

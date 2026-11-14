@@ -82,8 +82,9 @@ export async function exportProject(canvas, onProgress) {
       const input = new Input({ source: new BlobSource(m.file), formats: ALL_FORMATS });
       const track = await input.getPrimaryVideoTrack();
       if (!track || !(await track.canDecode())) {
+        const hevc = track?.codec === 'hevc';
         input.dispose();
-        throw tErr('err_decode', { name: m.name });
+        throw tErr(hevc ? 'err_hevc' : 'err_decode', { name: m.name });
       }
       inputs.set(m.id, { input, track, first: await track.getFirstTimestamp(), end: await track.computeDuration() });
     }

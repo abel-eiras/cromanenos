@@ -28,6 +28,7 @@ export const ui = { t: 0, playing: false, exporting: false, picking: false, sel:
 //   filter  { name }            'bw' | 'sepia' | 'neg' | 'comic'
 //   speed   { v }
 //   reverse {}
+//   mute    {}                  o anaco non soa
 export const FX_DEFAULTS = {
   chroma: () => ({ key: [0.1, 0.8, 0.2], tol: 0.13, soft: 0.06 }),
   split: () => ({ pos: 0.5, soft: 0.01 }),
@@ -37,6 +38,7 @@ export const FX_DEFAULTS = {
   filter: () => ({ name: 'bw' }),
   speed: () => ({ v: 2 }),
   reverse: () => ({}),
+  mute: () => ({}),
 };
 export const FX_ORDER = Object.keys(FX_DEFAULTS);
 
@@ -52,7 +54,17 @@ export const speedOf = (c) => c.fx.speed?.v ?? 1;
 export const isReverse = (c) => !!c.fx.reverse;
 export const clipDur = (c) => (c.out - c.in) / speedOf(c);
 export const trackDur = (tr) => tr.clips.reduce((s, c) => s + clipDur(c), 0);
-export const duration = () => Math.max(...project.tracks.map(trackDur));
+// O vídeo dura ata que remata o último anaco, adhesivo ou son.
+export const duration = () => Math.max(
+  ...project.tracks.map(trackDur),
+  ...project.overlay.map((o) => o.at + o.dur),
+  ...project.sounds.map((s) => s.at + s.buffer.duration),
+);
+
+// Canto pode durar como moito o tramo dun medio (as fotos, o que se queira).
+export const STILL_MAX = 30;
+export const MIN_CLIP = 0.2;
+export const mediaLength = (m) => (m.kind === 'video' ? m.dur : m.kind === 'frames' ? m.frames.length / m.fps : STILL_MAX);
 
 export function findClip(id) {
   for (let ti = 0; ti < project.tracks.length; ti++) {
@@ -118,6 +130,36 @@ export function splitClip(id, t) {
 export function removeClip(id) {
   const f = findClip(id);
   if (f) project.tracks[f.ti].clips.splice(f.idx, 1);
+}
+
+// Recorta un anaco tirando dun bordo. edge: 'l' | 'r'; dt: canto se moveu o
+// bordo na liña de tempo (segundos, positivo cara á dereita) desde base,
+// que é { in, out } ao comezar o xesto.
+export function trimClip(c, edge, dt, base) {
+  const max = mediaLength(c.media);
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  if (c.media.kind === 'image') {
+    // Unha foto non ten principio nin final: os dous bordos cambian canto dura.
+    c.in = 0;
+    c.out = clamp((base.out - base.in) + (edge === 'r' ? dt : -dt), 0.5, max);
+    return;
+  }
+  const ds = dt * speedOf(c);
+  // En marcha atrás o bordo esquerdo da liña de tempo é o final do medio.
+  const movesIn = (edge === 'l') !== isReverse(c);
+  const sign = isReverse(c) ? -1 : 1;
+  if (movesIn) c.in = clamp(base.in + sign * ds, 0, c.out - MIN_CLIP);
+  else c.out = clamp(base.out + sign * ds, c.in + MIN_CLIP, max);
+}
+
+// Leva un anaco a outra posición (e, se cadra, á outra pista). idx conta
+// sobre a pista de destino sen o propio anaco.
+export function placeClip(id, ti, idx) {
+  const f = findClip(id);
+  if (!f) return;
+  project.tracks[f.ti].clips.splice(f.idx, 1);
+  const clips = project.tracks[ti].clips;
+  clips.splice(Math.min(Math.max(0, idx), clips.length), 0, f.clip);
 }
 
 export function moveClip(id, dir) {

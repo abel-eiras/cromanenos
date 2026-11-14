@@ -20,6 +20,9 @@ export const state = { handle: null, name: null, busy: false };
 let hooks = {
   refresh() {}, notify() {}, version: () => '',
   confirmDiscard: async () => 'discard', pickFile: async () => null,
+  installed() {},   // cambiouse o proxecto enteiro (novo, aberto, recuperado)
+  saved() {},       // gardouse nun ficheiro
+  cleared() {},     // empezouse un proxecto novo
 };
 export function init(h) { hooks = { ...hooks, ...h }; markClean(); }
 
@@ -36,6 +39,7 @@ function signature() {
 }
 let cleanSig = '';
 function markClean() { cleanSig = signature(); }
+export { markClean };
 export const isDirty = () => signature() !== cleanSig;
 
 // true se se pode seguir (gardouse, ou a persoa dixo que non fai falta).
@@ -67,6 +71,19 @@ function install(data) {
   for (const m of old) if (!keep.has(m) && m.url) URL.revokeObjectURL(m.url);
   overlay.markDirty();
   invalidate();
+  hooks.installed();
+}
+
+export const mediaNow = () => mediaInUse();
+
+// Proxecto recuperado dunha pestana que se pechou: conta como sen gardar e
+// sen ficheiro (así "Gardar" pregunta onde e non pisa nada).
+export function adoptRecovered(data, name) {
+  install(data);
+  state.handle = null;
+  state.name = name || null;
+  cleanSig = '';
+  hooks.refresh();
 }
 
 export async function newProject({ force = false } = {}) {
@@ -76,6 +93,7 @@ export async function newProject({ force = false } = {}) {
   state.handle = null;
   state.name = null;
   markClean();
+  hooks.cleared();
   hooks.refresh();
   return true;
 }
@@ -132,6 +150,7 @@ async function saveToHandle(handle) {
     state.handle = handle;
     state.name = baseName(handle.name);
     markClean();
+    hooks.saved(true);
     await addRecent(handle);
     hooks.notify('pj_saved');
     return true;
@@ -156,6 +175,7 @@ async function download() {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 60000);
     markClean();
+    hooks.saved(false);
     hooks.notify('pj_downloaded');
     return true;
   } catch (err) {
@@ -229,6 +249,12 @@ export async function openHandle(handle, { askPermission = false, force = false 
     return false;
   }
   return openFile(file, handle);
+}
+
+// Un ficheiro de proxecto soltado enriba da páxina.
+export async function openDropped(file) {
+  if (!(await okToDiscard())) return false;
+  return openFile(file);
 }
 
 export async function openPicker() {

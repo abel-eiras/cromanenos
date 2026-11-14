@@ -52,6 +52,7 @@ function syncTrack(ti, a) {
     const c = a.clip, m = c.media;
     const el = elFor(ti, m);
     active = el;
+    if (el.muted !== !!c.fx.mute) el.muted = !!c.fx.mute;
     const want = Math.min(srcTime(c, a.local), m.dur - 0.03);
     const forward = ui.playing && !isReverse(c) && !a.hold && want < m.dur - 0.06;
     if (forward) {

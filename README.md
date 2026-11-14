@@ -21,7 +21,15 @@ O lanzador (o programiña que arranca con `iniciar.bat` ou `iniciar.sh`) pregún
 
 Se non hai internet, ou a rede do centro bloquea GitHub, non pasa nada: Cromanenos arranca e funciona igual, sen avisos nin erros.
 
-## Como arrancalo
+## Usar sen descargar
+
+Cromanenos tamén se pode abrir directamente cunha ligazón, sen descargar nin descomprimir nada:
+
+**<https://abel-eiras.github.io/cromanenos/>**
+
+Aí tamén **os vídeos non saen do ordenador**: esa páxina só entrega o programa, e todo o demais faise no navegador, igual ca na versión descargada. Sempre é a última versión.
+
+## Como arrancalo no propio ordenador
 
 Descarga o ZIP da [última versión](https://github.com/abel-eiras/cromanenos/releases/latest) e descomprímeo onde queiras (tamén vale un lapis USB).
 
@@ -54,19 +62,21 @@ A primeira vez que o arrancas créase no cartafol un lanzador **Cromanenos** coa
 
 Recoméndase **Chrome, Edge ou Chromium** nunha versión recente. Se o navegador que se abre é outro, copia o enderezo `http://localhost:8765/` e pégao nun destes.
 
-A cámara e o micrófono (para o stop motion e para gravar a voz) piden permiso a primeira vez.
+A cámara e o micrófono (para gravar vídeo, para o stop motion e para gravar a voz) piden permiso a primeira vez.
 
 ## Como se usa
 
-1. Preme **➕** en «Fondo» ou en «Enriba» para engadir vídeos ou fotos. Cada un queda como un anaco na liña de tempo.
+1. Preme **➕** en «Fondo» ou en «Enriba» para engadir vídeos ou fotos, ou arrástraos desde un cartafol e sóltaos na pista. Cada un queda como un anaco na liña de tempo. Con **🎥** gravas un vídeo coa cámara sen saír de Cromanenos.
 2. **Toca un anaco** para escollelo.
 3. En **✨ Efectos**, preme o que queiras poñerlle a ese anaco.
 4. Preme **▶ Ver** para comprobar como queda.
 5. Preme **🎬 Crear o vídeo** e despois **⬇ Descargar o vídeo** para ter o MP4.
 
-A vista do vídeo pódese facer máis grande ou máis pequena arrastrando a asa que ten debaixo (ou coas frechas do teclado, se a asa está escollida). Un dobre clic na asa devólvea ao tamaño automático. Cromanenos lembra o tamaño para a próxima vez.
+**Non hai medo a equivocarse**: **↩ Desfacer** (`Ctrl+Z`) volve atrás paso a paso, e **↪ Refacer** (`Ctrl+Y`) volve adiante. E se a pestana se pecha sen querer ou se apaga o ordenador, ao abrir Cromanenos outra vez pregunta **«Seguir onde o deixaches?»**.
 
-O botón **💡 Trucos** explica paso a paso os efectos máis vistosos. O idioma (galego, castelán ou inglés) cámbiase en **⚙**.
+A vista do vídeo pódese facer máis grande ou máis pequena arrastrando a asa **⋯ ↕ ⋯** que ten debaixo (ou coas frechas do teclado, se a asa está escollida). Un dobre clic na asa devólvea ao tamaño automático. Cromanenos lembra o tamaño para a próxima vez.
+
+O botón **💡 Trucos** explica paso a paso os efectos máis vistosos, e cada truco ten un botón **▶ Probar cun exemplo** que o carga xa feito cuns vídeos de mostra, para ver como queda antes de gravar nada. O idioma (galego, castelán ou inglés) cámbiase en **⚙**.
 
 ### Proxectos: gardar e seguir outro día
 
@@ -99,6 +109,15 @@ O proxecto non é o vídeo final: para ter o MP4 hai que premer **🎬 Crear o v
 | 🎨 | Cores | Branco e negro, sepia e outros filtros |
 | ⏩ | Velocidade | Cámara lenta ou rápida |
 | ⏪ | Ao revés | Marcha atrás |
+| 🔇 | Sen son | O anaco deixa de soar (para poñerlle a túa voz ou outros sons) |
+
+### Mover e recortar os anacos
+
+- **Arrastra un anaco** para cambialo de sitio, ou para levalo á outra pista.
+- **Tira dos seus bordos** para recortarlle o principio ou o final (nas fotos, para que duren máis ou menos).
+- Co teclado: `Alt` + frechas moven o anaco escollido.
+
+Cada anaco amosa unha miniatura do vídeo e as iconas dos efectos que leva postos.
 
 ### Outras ferramentas
 
@@ -107,6 +126,11 @@ O proxecto non é o vídeo final: para ter o MP4 hai que premer **🎬 Crear o v
 - **⭐ Adhesivos e texto** que aparecen e desaparecen cando ti queiras.
 - **🔊 Sons**: seis efectos sonoros e gravación da voz co micrófono.
 - **📸 Stop motion**: fotos coa cámara, unha a unha, ou escollidas do disco.
+- **🎥 Gravar coa cámara**: conta atrás 3-2-1, gravar, e despois «Usar» ou «Repetir».
+
+### Canto dura o vídeo
+
+O vídeo remata cando remata o último anaco, adhesivo, texto ou son, o que estea máis á dereita. Se o «Fondo» acaba antes, queda quieto na súa última imaxe (así unha toma curta do sitio baleiro vale de fondo para unha toma máis longa). A pista de «Enriba» desaparece cando remata.
 
 ### Trucos
 
@@ -130,6 +154,13 @@ No cartafol `test-media/` hai uns vídeos sintéticos pequenos para probar sen t
 | `enriba.mp4` | Un cadrado vermello movéndose sobre fondo verde, para probar o croma |
 | `conta.mp4` | Un contador de fotogramas, para comprobar a velocidade e a marcha atrás |
 | `fondo.png` | Unha imaxe fixa de cor |
+| `ex-sitio.mp4` | Exemplos dos trucos: unha habitación baleira |
+| `ex-calcetin.mp4` | A mesma habitación cun «calcetín» verde que sostén unha pelota (a man invisible) |
+| `ex-monstro-esquerda.mp4`, `ex-monstro-dereita.mp4` | Un monstriño debuxado, á esquerda e á dereita da habitación (clonarse, aparecer e desaparecer, pantasma) |
+| `ex-verde.mp4` | O monstriño sobre fondo verde (xigantes e miniaturas) |
+| `ex-paisaxe.png` | Unha paisaxe con casiñas |
+
+Os exemplos son debuxos feitos por programa (`tools/xerar-exemplos.py`); non sae ninguén neles.
 
 ## Limitacións coñecidas
 
@@ -138,9 +169,11 @@ No cartafol `test-media/` hai uns vídeos sintéticos pequenos para probar sen t
 - Os anacos ao revés non soan na previsualización, pero si no vídeo gardado.
 - O ficheiro de proxecto leva dentro os vídeos, así que ocupa o mesmo ca eles xuntos.
 - A lista de proxectos recentes e o «Gardar» directo só funcionan en Chrome, Edge e Chromium.
-- Os vídeos gravados nalgúns móbiles (formato HEVC/H.265) poden non abrirse; nese caso hai que gravalos en formato «máis compatible» (H.264).
+- Os vídeos gravados nalgúns móbiles (formato HEVC/H.265) poden non abrirse; Cromanenos avisa e explica que hai que gravalos en formato «máis compatible» (H.264).
+- A recuperación automática garda unha copia dos vídeos no almacenamento do navegador, neste mesmo ordenador; se non hai sitio, ou en navegación privada, simplemente non hai recuperación. Só a leva unha pestana de cada vez.
+- Despois de «Gardar» nun ficheiro, pode que non se poidan desfacer os pasos anteriores nos que se borraran anacos.
 - Está pensado para vídeos curtos, de poucos minutos.
-- O arranque e as actualizacións en Windows, e o uso da cámara e do micrófono, aínda están pouco probados.
+- O arranque e as actualizacións en Windows, e o uso real da cámara e do micrófono, aínda están pouco probados.
 
 ## Para quen queira tocar o código
 
@@ -149,7 +182,8 @@ Non hai paso de compilación: son módulos de JavaScript servidos tal cal.
 | Ruta | Contido |
 |---|---|
 | `index.html`, `style.css` | A páxina |
-| `js/` | O código: modelo da liña de tempo, compositor WebGL, previsualización, exportación, son, stop motion, proxectos, versións, idiomas |
+| `js/` | O código: modelo da liña de tempo, compositor WebGL, previsualización, exportación, son, stop motion, cámara, proxectos, desfacer, recuperación, miniaturas, versións, idiomas |
+| `.nojekyll` | Para que GitHub Pages sirva os ficheiros tal cal |
 | `VERSION` | O número desta versión |
 | `icons/` | A icona do lanzador e do navegador, feitas a partir de `logo.jpeg` |
 | `vendor/` | [Mediabunny](https://mediabunny.dev/) 1.66.0, para ler e escribir MP4 |
@@ -158,6 +192,10 @@ Non hai paso de compilación: son módulos de JavaScript servidos tal cal.
 ### O ficheiro `.cromanenos`
 
 É un formato propio e sinxelo: unha sinatura de 20 bytes (`CROMANENOS-PROXECTO` e un salto de liña), un número de 4 bytes coa lonxitude do índice, o índice en JSON e, a continuación, os vídeos, fotos e gravacións un tras outro. O índice di que versión do formato é, describe a liña de tempo e lista o nome, o tipo e o tamaño de cada ficheiro incluído. O código está en `js/projectfile.js`.
+
+### Recuperación automática
+
+Uns segundos despois de cada cambio, e ao agochar ou pechar a pestana, `js/recovery.js` garda o traballo sen gardar no almacenamento privado do navegador (OPFS): cada vídeo escríbese unha soa vez e despois só se reescribe a descrición da liña de tempo. Bórrase ao gardar o proxecto nun ficheiro, ao empezar un novo ou ao dicir que non se quere recuperar. Nunca sae do ordenador.
 
 ### Actualizacións
 
