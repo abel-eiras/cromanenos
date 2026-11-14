@@ -182,8 +182,9 @@ export async function stopRecording() {
   } finally {
     r.stream.getTracks().forEach((tr) => tr.stop());
   }
+  // Devólvese tamén a gravación orixinal, que é o que se garda no proxecto.
   const blob = new Blob(r.chunks, { type: r.mr.mimeType });
-  return decode(await blob.arrayBuffer());
+  return { buffer: await decode(await blob.arrayBuffer()), blob };
 }
 
 // ---------------------------------------------------------- mestura para gardar

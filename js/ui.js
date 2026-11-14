@@ -12,6 +12,8 @@ import * as audio from './audio.js';
 import { exportProject } from './exporter.js';
 import { initStopMotion, openStopMotion, retranslate as retranslateStopMotion } from './stopmotion.js';
 import { readColor, invalidate } from './compositor.js';
+import * as projects from './projects.js';
+import * as updates from './updates.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -66,6 +68,182 @@ function targetAtPlayhead() {
     if (a && !a.hold) return { ti, clip: a.clip, local: a.local };
   }
   return null;
+}
+
+// ---------------------------------------------------------------------- avisos
+// Aviso tranquilo na parte de arriba; marcha só aos poucos segundos se non é
+// "sticky".
+let notice = null;
+let noticeTimer = 0;
+function notify(key, vars, { sticky = false } = {}) {
+  clearTimeout(noticeTimer);
+  notice = key ? [key, vars] : null;
+  $('notice').hidden = !notice;
+  if (notice) $('noticeText').textContent = t(...notice);
+  if (notice && !sticky) noticeTimer = setTimeout(() => notify(null), 5000);
+}
+
+// ------------------------------------------------------------------- proxectos
+function renderProjectBar() {
+  const dirty = projects.isDirty();
+  const name = projects.displayName();
+  $('projName').textContent = `${name}${dirty ? ' •' : ''}`;
+  $('projName').title = dirty ? t('pj_unsaved') : '';
+  document.title = `${dirty ? '• ' : ''}${name} – Cromanenos`;
+  const busy = ui.exporting || projects.state.busy;
+  for (const id of ['pjNew', 'pjOpen', 'pjSave', 'pjSaveAs']) $(id).disabled = busy;
+}
+
+function confirmDiscard() {
+  return new Promise((res) => {
+    const d = $('confirmDialog');
+    const done = (answer) => { d.close(); res(answer); };
+    $('cfSave').onclick = () => done('save');
+    $('cfDiscard').onclick = () => done('discard');
+    $('cfCancel').onclick = () => done('cancel');
+    d.oncancel = () => res('cancel');
+    d.showModal();
+  });
+}
+
+// Navegadores sen File System Access: pídese o ficheiro cun <input>.
+function pickFile() {
+  return new Promise((res) => {
+    const inp = $('pjFile');
+    inp.value = '';
+    inp.onchange = () => res(inp.files[0] || null);
+    inp.oncancel = () => res(null);
+    inp.click();
+  });
+}
+
+async function showOpenDialog() {
+  if (ui.exporting || projects.state.busy) return;
+  const list = await projects.listRecent();
+  $('recentNote').textContent = !projects.HAS_FS ? t('recent_unsupported') : list.length ? '' : t('recent_none');
+  $('recentList').replaceChildren(...list.map((r) => el('button', {
+    class: 'recent',
+    onclick: async () => { $('openDialog').close(); await projects.openRecent(r.id); },
+  },
+  el('span', { class: 'rname', text: `🎬 ${r.name}` }),
+  el('span', { class: 'rdate', text: new Date(r.when).toLocaleDateString(getLang()) }))));
+  if (!$('openDialog').open) $('openDialog').showModal();
+}
+
+// --------------------------------------------------------------------- versións
+const upd = { msg: null, apply: false, link: false, busy: false };
+function renderUpdates() {
+  const i = updates.info;
+  $('verLine').textContent = i.version ? t('ver_line', { v: i.version }) : '';
+  $('updCheck').hidden = !i.launcher;
+  $('updCheck').disabled = upd.busy;
+  $('updApply').hidden = !upd.apply;
+  $('updApply').disabled = upd.busy;
+  $('updMsg').textContent = upd.msg ? t(...upd.msg) : '';
+  $('updLink').hidden = !(upd.link || !i.launcher);
+}
+
+async function checkUpdates() {
+  Object.assign(upd, { msg: ['upd_checking'], apply: false, link: false, busy: true });
+  renderUpdates();
+  const r = await updates.check();
+  upd.busy = false;
+  if (!r.ok) Object.assign(upd, { msg: ['upd_fail'], link: true });
+  else if (!r.available) upd.msg = ['upd_latest'];
+  else Object.assign(upd, { msg: ['upd_new', { v: r.latest }], apply: updates.info.canUpdate, link: !updates.info.canUpdate });
+  renderUpdates();
+  return r;
+}
+
+async function applyUpdate() {
+  Object.assign(upd, { msg: ['upd_applying'], apply: false, link: false, busy: true });
+  renderUpdates();
+  const r = await updates.apply();
+  upd.busy = false;
+  if (r.ok) upd.msg = ['upd_done'];
+  else Object.assign(upd, { msg: ['upd_failApply'], link: true });
+  renderUpdates();
+  return r;
+}
+
+// Ao arrancar, sen molestar: se hai versión nova e se pode, instálase soa.
+async function startupUpdate() {
+  await updates.init();
+  renderUpdates();
+  const v = await updates.autoUpdate();
+  if (v) {
+    upd.msg = ['upd_done'];
+    renderUpdates();
+    notify('upd_ready', { v }, { sticky: true });
+  }
+  return v;
+}
+
+// ------------------------------------------------- tamaño da vista do vídeo
+const SIZE_KEY = 'cromanenos.viewSize';
+const SIZE_MIN = 25, SIZE_MAX = 100;
+let viewPct = null; // null = automático (que colla a liña de tempo na pantalla)
+
+function autoViewPct() {
+  const stageW = $('viewWrap').parentElement.clientWidth;
+  if (!stageW) return SIZE_MAX;
+  const wantH = Math.max(180, window.innerHeight * 0.5);
+  return Math.min(SIZE_MAX, Math.max(SIZE_MIN, ((wantH * 16) / 9 / stageW) * 100));
+}
+
+function applyViewSize() {
+  const pct = viewPct ?? autoViewPct();
+  $('viewWrap').style.width = `${pct}%`;
+  $('viewHandle').setAttribute('aria-valuenow', String(Math.round(pct)));
+}
+
+function setViewSize(pct, store = true) {
+  viewPct = pct == null ? null : Math.min(SIZE_MAX, Math.max(SIZE_MIN, pct));
+  applyViewSize();
+  if (!store) return;
+  try {
+    if (viewPct == null) localStorage.removeItem(SIZE_KEY);
+    else localStorage.setItem(SIZE_KEY, String(Math.round(viewPct * 10) / 10));
+  } catch { /* sen almacenamento: vale para esta vez */ }
+}
+
+function initViewSize() {
+  const handle = $('viewHandle');
+  try {
+    const saved = parseFloat(localStorage.getItem(SIZE_KEY));
+    if (Number.isFinite(saved)) viewPct = Math.min(SIZE_MAX, Math.max(SIZE_MIN, saved));
+  } catch { /* automático */ }
+  applyViewSize();
+  window.addEventListener('resize', applyViewSize);
+
+  handle.addEventListener('pointerdown', (ev) => {
+    const stageW = $('viewWrap').parentElement.clientWidth;
+    const h0 = canvas.getBoundingClientRect().height;
+    const y0 = ev.clientY;
+    try { handle.setPointerCapture(ev.pointerId); } catch { /* punteiro sen captura */ }
+    const move = (e) => setViewSize((((h0 + e.clientY - y0) * 16) / 9 / stageW) * 100, false);
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      handle.removeEventListener('pointercancel', up);
+      setViewSize(viewPct);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
+    ev.preventDefault();
+  });
+  handle.addEventListener('dblclick', () => setViewSize(null));
+  handle.addEventListener('keydown', (e) => {
+    const now = viewPct ?? autoViewPct();
+    const step = { ArrowDown: 5, ArrowRight: 5, ArrowUp: -5, ArrowLeft: -5 }[e.key];
+    if (step) setViewSize(now + step);
+    else if (e.key === 'Home') setViewSize(SIZE_MIN);
+    else if (e.key === 'End') setViewSize(SIZE_MAX);
+    else if (e.key === 'Enter' || e.key === ' ') setViewSize(null);
+    else return;
+    e.preventDefault();
+  });
 }
 
 // --------------------------------------------------------------------- estado
@@ -401,8 +579,8 @@ async function toggleRecording() {
   if (audio.isRecording()) {
     preview.pause();
     try {
-      const buffer = await audio.stopRecording();
-      const s = { id: uid(), kind: 'voice', at: recAt, buffer };
+      const { buffer, blob } = await audio.stopRecording();
+      const s = { id: uid(), kind: 'voice', at: recAt, buffer, blob };
       project.sounds.push(s);
       ui.sel = { type: 'sound', id: s.id };
       setStatus(null);
@@ -505,6 +683,9 @@ export function refresh() {
     : !top ? t('hintTop')
     : '';
   if (status) $('status').textContent = t(...status);
+  if (notice) $('noticeText').textContent = t(...notice);
+  renderProjectBar();
+  renderUpdates();
   renderTimeline();
   renderClipCard();
   renderFx();
@@ -586,16 +767,43 @@ export function initUI(view) {
   $('openTricks').addEventListener('click', () => $('tricksDialog').showModal());
   document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));
 
+  $('pjNew').addEventListener('click', () => projects.newProject());
+  $('pjOpen').addEventListener('click', showOpenDialog);
+  $('pjSave').addEventListener('click', () => projects.save());
+  $('pjSaveAs').addEventListener('click', () => projects.saveAs());
+  $('pjBrowse').addEventListener('click', () => { $('openDialog').close(); projects.openPicker(); });
+  $('noticeClose').addEventListener('click', () => notify(null));
+  $('updCheck').addEventListener('click', checkUpdates);
+  $('updApply').addEventListener('click', applyUpdate);
+  $('updLink').href = updates.RELEASES_URL;
+
   document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && ['s', 'o'].includes(e.key.toLowerCase())) {
+      e.preventDefault(); // que o navegador non garde nin abra a páxina
+      if (document.querySelector('dialog[open]') || ui.exporting) return;
+      if (e.key.toLowerCase() === 'o') showOpenDialog();
+      else if (e.shiftKey) projects.saveAs();
+      else projects.save();
+      return;
+    }
     if (e.target.closest('input, textarea, dialog')) return;
     if (e.key === 'Delete') deleteSelection();
   });
+  window.addEventListener('beforeunload', (e) => {
+    if (projects.isDirty()) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  projects.init({ refresh, notify, confirmDiscard, pickFile, version: () => updates.info.version });
+  // Os deslizadores cambian o proxecto sen repintar todo: revísase cada pouco.
+  setInterval(renderProjectBar, 700);
+  initViewSize();
 
   onLangChange(() => { renderStatic(); retranslateStopMotion(); refresh(); });
   preview.setOnTick(onTick);
   applyI18n();
   renderStatic();
   refresh();
+  setTimeout(() => { startupUpdate().catch(() => {}); }, 1500);
 }
 
 // Para as probas automáticas (e para xogar desde a consola).
@@ -603,4 +811,5 @@ export const api = {
   project, ui, refresh, select, seek: seekTo, addFiles, addFrames, addFx, removeFx, splitHere, freezeHere,
   deleteSelection, addOverlayItem, addSfx, exportVideo, setPicking, setLang, renderNow: preview.renderNow,
   moveClip: (id, dir) => { moveClip(id, dir); refresh(); },
+  projects, updates, checkUpdates, applyUpdate, startupUpdate, setViewSize, notify,
 };

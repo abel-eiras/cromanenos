@@ -4,3 +4,6 @@ node_modules/
 # Atallos que crean os arrancadores (levan rutas deste ordenador)
 Cromanenos.lnk
 Cromanenos.desktop
+# Restos dunha actualización interrompida
+.actualizacion-*/
+.proba-*

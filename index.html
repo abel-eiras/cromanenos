@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Garantía técnica de privacidade: connect-src 'none' fai que o propio navegador
-     bloquee calquera intento de enviar datos a un servidor. -->
+<!-- Garantía técnica de privacidade: connect-src 'self' fai que o propio navegador
+     bloquee calquera conexión da páxina que non sexa co seu lanzador local, que é
+     quen mira se hai versións novas. A páxina non pode enviar nada a internet. -->
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src blob:; connect-src 'none'">
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src blob:; connect-src 'self'">
 <title>Cromanenos</title>
 <link rel="icon" type="image/png" href="icons/favicon.png">
 <link rel="stylesheet" href="style.css">
@@ -14,15 +15,32 @@
 <body>
 <header>
   <h1>Cromanenos</h1>
-  <p class="privacy" data-i18n="privacy"></p>
+  <div class="proj" role="group" data-i18n-aria="pj_area">
+    <span id="projName" class="pname"></span>
+    <button id="pjNew" data-i18n="pj_new"></button>
+    <button id="pjOpen" data-i18n="pj_open"></button>
+    <button id="pjSave" data-i18n="pj_save"></button>
+    <button id="pjSaveAs" data-i18n="pj_saveAs"></button>
+  </div>
   <span class="spacer"></span>
+  <p class="privacy" data-i18n="privacy"></p>
   <button id="openTricks" class="big" data-i18n="tricks"></button>
   <button id="openSettings" class="big" data-i18n-aria="settings" data-i18n-title="settings">⚙</button>
 </header>
 
+<div id="notice" class="notice" role="status" hidden>
+  <span id="noticeText"></span>
+  <button id="noticeClose" class="x" data-i18n-aria="noticeClose" data-i18n-title="noticeClose">✖</button>
+</div>
+
 <main>
   <section class="stage">
-    <canvas id="view" width="1280" height="720" role="img" data-i18n-aria="preview"></canvas>
+    <div id="viewWrap">
+      <canvas id="view" width="1280" height="720" role="img" data-i18n-aria="preview"></canvas>
+      <div id="viewHandle" role="slider" tabindex="0" aria-orientation="vertical"
+           aria-valuemin="25" aria-valuemax="100" aria-valuenow="100"
+           data-i18n-aria="resize" data-i18n-title="resize"><span></span></div>
+    </div>
     <p id="hint" class="hint"></p>
 
     <div class="transport">
@@ -131,8 +149,39 @@
   <h2>⚙ <span data-i18n="settings"></span></h2>
   <h3 data-i18n="language"></h3>
   <div id="langButtons" class="palette"></div>
+  <h3 data-i18n="ver_title"></h3>
+  <p id="verLine"></p>
+  <div class="row">
+    <button id="updCheck" hidden data-i18n="upd_check"></button>
+    <button id="updApply" class="go" hidden data-i18n="upd_apply"></button>
+  </div>
+  <p id="updMsg" class="hint" role="status"></p>
+  <a id="updLink" hidden target="_blank" rel="noopener" data-i18n="upd_link"></a>
   <div class="row end"><button class="big" data-close data-i18n="close"></button></div>
 </dialog>
+
+<dialog id="openDialog">
+  <h2 data-i18n="open_title"></h2>
+  <h3 data-i18n="recent_title"></h3>
+  <div id="recentList" class="recents"></div>
+  <p id="recentNote" class="hint"></p>
+  <div class="row end">
+    <button id="pjBrowse" class="big" data-i18n="pj_browse"></button>
+    <button class="big" data-close data-i18n="close"></button>
+  </div>
+</dialog>
+
+<dialog id="confirmDialog">
+  <h2 data-i18n="cf_title"></h2>
+  <p data-i18n="cf_text"></p>
+  <div class="row end">
+    <button id="cfCancel" data-i18n="cancel"></button>
+    <button id="cfDiscard" data-i18n="cf_discard"></button>
+    <button id="cfSave" class="big go" data-i18n="pj_save"></button>
+  </div>
+</dialog>
+
+<input id="pjFile" type="file" accept=".cromanenos" hidden>
 
 <dialog id="tricksDialog">
   <h2 data-i18n="tricks"></h2>

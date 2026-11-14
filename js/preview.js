@@ -122,6 +122,14 @@ function tick() {
 
 export function start() { requestAnimationFrame(tick); }
 
+// Solta os <video> dun medio (por exemplo, cando cambia o seu enderezo ao
+// gardar o proxecto); vólvense crear sós na seguinte pintada.
+export function dropMedia(media) {
+  for (const [k, el] of els) {
+    if (k.endsWith(`:${media.id}`)) { el.pause(); el.removeAttribute('src'); el.load(); els.delete(k); }
+  }
+}
+
 // Para liberar os <video> dun medio que xa non se usa.
 export function forgetUnused() {
   const used = new Set();

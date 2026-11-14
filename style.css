@@ -22,12 +22,24 @@ h2 { margin: 0 0 .3rem; font-size: 1.05rem; }
 h3 { margin: .6rem 0 .3rem; font-size: 1rem; color: var(--muted); }
 .privacy { margin: 0; color: var(--muted); font-size: .9rem; }
 .spacer { flex: 1; }
+.proj { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.pname { font-weight: 700; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: .2rem; }
+.notice {
+  display: flex; align-items: center; gap: .8rem; justify-content: space-between;
+  margin: 0 1rem .6rem; padding: .5rem .8rem; border-radius: 10px; background: #2f4a3a; color: var(--ink);
+}
 
 main { display: grid; grid-template-columns: minmax(0, 1fr) 23rem; gap: 1rem; padding: 0 1rem 1rem; align-items: start; }
 @media (max-width: 950px) { main { grid-template-columns: 1fr; } }
 
 .stage { min-width: 0; }
+#viewWrap { width: 100%; max-width: 100%; margin: 0 auto; }
 #view { width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; display: block; touch-action: none; }
+/* Asa para cambiar o tamaño da vista */
+#viewHandle { height: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: ns-resize; touch-action: none; border-radius: 8px; }
+#viewHandle span { width: 4.5rem; height: .35rem; border-radius: 4px; background: var(--btn); }
+#viewHandle:hover span, #viewHandle:focus-visible span { background: var(--accent); }
+#viewHandle:focus-visible { outline: 2px solid var(--accent); }
 #view.picking { cursor: crosshair; outline: 4px dashed var(--accent); }
 .hint { margin: .3rem 0; color: var(--muted); font-size: .9rem; min-height: 1.2em; }
 .hint.warn { color: var(--accent); }
@@ -108,6 +120,12 @@ dialog::backdrop { background: rgba(8, 10, 20, .75); }
 dialog h2 { font-size: 1.3rem; margin-bottom: .6rem; }
 details { background: #222844; border-radius: 10px; padding: .6rem .8rem; margin-bottom: .5rem; }
 summary { font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+.recents { display: flex; flex-direction: column; gap: .35rem; }
+.recent { display: flex; justify-content: space-between; gap: 1rem; text-align: left; font-size: 1.05rem; padding: .7rem .9rem; }
+.rname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rdate { color: var(--muted); flex: none; }
+#updLink { color: var(--accent); }
+#verLine { margin: 0; }
 ol { margin: .5rem 0 0; padding-left: 1.4rem; line-height: 1.5; }
 
 .smview { position: relative; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; }
