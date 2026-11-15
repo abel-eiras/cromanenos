@@ -100,8 +100,10 @@ export async function exportProject(canvas, onProgress) {
     const mixed = await mixProject(D);
     let asrc = null;
     if (mixed) {
-      const acodec = await getFirstEncodableAudioCodec(output.format.getSupportedAudioCodecs(),
-        { numberOfChannels: 2, sampleRate: mixed.sampleRate });
+      // Sen codificador de son (algúns Safari) sae o vídeo mudo, non un erro.
+      const acodec = typeof window.AudioEncoder !== 'function' ? null
+        : await getFirstEncodableAudioCodec(output.format.getSupportedAudioCodecs(),
+          { numberOfChannels: 2, sampleRate: mixed.sampleRate }).catch(() => null);
       if (acodec) {
         asrc = new AudioBufferSource({ codec: acodec, bitrate: QUALITY_MEDIUM });
         output.addAudioTrack(asrc);

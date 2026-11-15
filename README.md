@@ -74,13 +74,15 @@ A cámara e o micrófono (para gravar vídeo, para o stop motion e para gravar a
 
 **Non hai medo a equivocarse**: **↩ Desfacer** (`Ctrl+Z`) volve atrás paso a paso, e **↪ Refacer** (`Ctrl+Y`) volve adiante. E se a pestana se pecha sen querer ou se apaga o ordenador, ao abrir Cromanenos outra vez pregunta **«Seguir onde o deixaches?»**.
 
-A vista do vídeo pódese facer máis grande ou máis pequena arrastrando a asa **⋯ ↕ ⋯** que ten debaixo (ou coas frechas do teclado, se a asa está escollida). Un dobre clic na asa devólvea ao tamaño automático. Cromanenos lembra o tamaño para a próxima vez.
+A vista do vídeo pódese facer máis grande ou máis pequena arrastrando a asa **⋯ ↕ ⋯** que ten debaixo (ou coas frechas do teclado, se a asa está escollida). Un dobre clic na asa devólvea ao tamaño automático. Cromanenos lembra o tamaño para a próxima vez. A vista nunca medra tanto que tape a liña de tempo; nas tablets pequenas en horizontal a asa non aparece, porque a vista xa ocupa todo o sitio que hai.
+
+En pantallas pequenas ou táctiles a cabeceira faise máis compacta: os botóns do proxecto van dentro de **📁**, Desfacer e Refacer quedan como **↩** e **↪**, e cada pista ten un só **➕** que pregunta se queres engadir un vídeo ou foto, gravar coa cámara ou facer stop motion. O aviso de privacidade está en **🔒** e en ⚙.
 
 O botón **💡 Trucos** explica paso a paso os efectos máis vistosos, e cada truco ten un botón **▶ Probar cun exemplo** que o carga xa feito cuns vídeos de mostra, para ver como queda antes de gravar nada. O idioma (galego, castelán ou inglés) cámbiase en **⚙**.
 
 ### Proxectos: gardar e seguir outro día
 
-Na parte de arriba están os botóns do proxecto:
+Na parte de arriba están os botóns do proxecto (en tablets, dentro de **📁**):
 
 | | |
 |---|---|
@@ -138,6 +140,21 @@ O vídeo remata cando remata o último anaco, adhesivo, texto ou son, o que este
 - **👯 Clónate.** Grava dúas tomas sen mover a cámara: nunha estás á esquerda e na outra á dereita. Pon unha en «Fondo» e outra en «Enriba», e a esta ponlle 👯 Pantalla dividida.
 - **✨ Aparecer e desaparecer.** Grava unha toma contigo e outra sen ti, sen mover a cámara, e ponas seguidas na mesma pista.
 
+## En tablets
+
+Cromanenos está pensado para que tamén o usen nenas e nenos co dedo, en tablets de ata 10 polgadas:
+
+- **Todo cabe nunha pantalla**: a vista do vídeo, os botóns e as catro filas da liña de tempo vense xuntos sen ter que desprazar a páxina. A vista faise tan grande como colla.
+- **Botóns para dedos**: cando hai pantalla táctil, todos os botóns miden polo menos 48 píxeles, os deslizadores teñen un tirador grande e hai separación entre botóns.
+- **En horizontal** (recomendado) o panel de efectos queda á dereita. **En vertical** aparecen debaixo da liña de tempo catro pestanas grandes (🎬 Anaco, ✨ Efectos, ⭐ Adhesivos, 🔊 Son); ao tocar un anaco ábrese soa a de Efectos, e ao tocar un adhesivo ou un son, a súa.
+- **Sen sustos co dedo**: un toque escolle un anaco sen movelo; para arrastralo hai que desprazar o dedo un pouco. Os bordos para recortar só aparecen no anaco escollido.
+
+Navegador recomendado: **Chrome en Android**. Abrir **<https://abel-eiras.github.io/cromanenos/>** chega; non hai nada que instalar.
+
+Como se garda nunha tablet Android: Chrome alí non deixa escribir directamente nun ficheiro, así que **💾 Gardar** descarga o proxecto `.cromanenos` ao cartafol de descargas, e **📂 Abrir** pide escollelo. Non hai lista de proxectos recentes. O vídeo final tamén vai ás descargas.
+
+**iPad**: non está probado. Cromanenos mira o que permite o navegador e non se rompe: se Safari non pode crear o vídeo, avisa con «Este navegador non pode crear vídeos» en vez de fallar a medias; se non pode gardar a copia de recuperación, simplemente non hai recuperación; e se non hai codificador de son, o vídeo sae sen son. O que se sabe: para crear o vídeo fai falta WebCodecs, que Safari só ten en versións recentes, e Chrome en iPad usa por dentro o mesmo motor ca Safari.
+
 ## Versións novas
 
 Ao arrancar, Cromanenos mira se hai unha versión máis nova. Se a hai, e ten conexión, descárgaa e instálaa soa mentres segues traballando; un aviso di que estará lista **a próxima vez que o abras**. Só se substitúen os ficheiros do programa: os teus proxectos e vídeos non se tocan.
@@ -174,6 +191,8 @@ Os exemplos son debuxos feitos por programa (`tools/xerar-exemplos.py`); non sae
 - Despois de «Gardar» nun ficheiro, pode que non se poidan desfacer os pasos anteriores nos que se borraran anacos.
 - Está pensado para vídeos curtos, de poucos minutos.
 - O arranque e as actualizacións en Windows, e o uso real da cámara e do micrófono, aínda están pouco probados.
+- O deseño para tablets probouse simulando tamaños de pantalla e toques nun navegador de escritorio, non en tablets de verdade. iPad, sen probar.
+- Nun móbil (pantalla moi estreita) funciona pero vai moi xusto: a liña de tempo pode quedar desprazable.
 
 ## Para quen queira tocar o código
 
@@ -188,6 +207,8 @@ Non hai paso de compilación: son módulos de JavaScript servidos tal cal.
 | `icons/` | A icona do lanzador e do navegador, feitas a partir de `logo.jpeg` |
 | `vendor/` | [Mediabunny](https://mediabunny.dev/) 1.66.0, para ler e escribir MP4 |
 | `tools/serve.py`, `tools/serve.ps1` | Os lanzadores: serven os ficheiros a este ordenador e encárganse das actualizacións |
+
+Para ver o deseño de tablet nun ordenador sen pantalla táctil, abre a páxina con `?tactil` ao final do enderezo (só para probas).
 
 ### O ficheiro `.cromanenos`
 

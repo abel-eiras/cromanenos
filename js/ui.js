@@ -95,7 +95,7 @@ function renderProjectBar() {
   $('projName').title = dirty ? t('pj_unsaved') : '';
   document.title = `${dirty ? '• ' : ''}${name} – Cromanenos`;
   const busy = ui.exporting || projects.state.busy;
-  for (const id of ['pjNew', 'pjOpen', 'pjSave', 'pjSaveAs']) $(id).disabled = busy;
+  for (const id of ['pjNew', 'pjOpen', 'pjSave', 'pjSaveAs', 'pjMenu']) $(id).disabled = busy;
   $('undoBtn').disabled = busy || !history.canUndo();
   $('redoBtn').disabled = busy || !history.canRedo();
 }
@@ -208,17 +208,33 @@ async function startupUpdate() {
 // ------------------------------------------------- tamaño da vista do vídeo
 const SIZE_KEY = 'cromanenos.viewSize';
 const SIZE_MIN = 25, SIZE_MAX = 100;
-let viewPct = null; // null = automático (que colla a liña de tempo na pantalla)
+const VIEW_MIN_H = 110; // por debaixo disto, mellor que se despraze a columna
+let viewPct = null; // null = automático: o máis grande que colla sen tapar a liña de tempo
 
-function autoViewPct() {
-  const stageW = $('viewWrap').parentElement.clientWidth;
-  if (!stageW) return SIZE_MAX;
-  const wantH = Math.max(180, window.innerHeight * 0.5);
-  return Math.min(SIZE_MAX, Math.max(SIZE_MIN, ((wantH * 16) / 9 / stageW) * 100));
+// Canto pode medir a vista para que o resto (botóns, liña de tempo) caiba
+// enteiro na pantalla, en % do ancho da columna.
+function fitViewPct() {
+  const wrap = $('viewWrap');
+  const stage = wrap.parentElement;
+  const stageW = stage.clientWidth;
+  if (!stageW || !stage.clientHeight) return SIZE_MAX;
+  const cs = getComputedStyle(stage);
+  const gap = parseFloat(cs.rowGap) || 0;
+  let used = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  let shown = 0;
+  for (const ch of stage.children) {
+    if (getComputedStyle(ch).display === 'none') continue;
+    shown++;
+    if (ch !== wrap) used += ch.getBoundingClientRect().height;
+  }
+  used += Math.max(0, shown - 1) * gap + $('viewHandle').getBoundingClientRect().height;
+  const h = Math.max(VIEW_MIN_H, stage.clientHeight - used - 1);
+  return Math.min(SIZE_MAX, Math.max(SIZE_MIN, ((h * 16) / 9 / stageW) * 100));
 }
 
 function applyViewSize() {
-  const pct = viewPct ?? autoViewPct();
+  const fit = fitViewPct();
+  const pct = Math.min(viewPct ?? SIZE_MAX, fit);
   $('viewWrap').style.width = `${pct}%`;
   $('viewHandle').setAttribute('aria-valuenow', String(Math.round(pct)));
 }
@@ -241,13 +257,23 @@ function initViewSize() {
   } catch { /* automático */ }
   applyViewSize();
   window.addEventListener('resize', applyViewSize);
+  // Calquera cambio de tamaño (xirar a tablet, aparecer un aviso, a barra de
+  // progreso…) volve axustar a vista.
+  if (typeof ResizeObserver === 'function') {
+    const ro = new ResizeObserver(() => applyViewSize()); // só cambia o ancho da vista, que non se observa
+    ro.observe($('viewWrap').parentElement);
+    ro.observe(document.querySelector('.timeline'));
+    ro.observe($('exportRow'));
+  }
 
   handle.addEventListener('pointerdown', (ev) => {
     const stageW = $('viewWrap').parentElement.clientWidth;
     const h0 = canvas.getBoundingClientRect().height;
     const y0 = ev.clientY;
     try { handle.setPointerCapture(ev.pointerId); } catch { /* punteiro sen captura */ }
-    const move = (e) => setViewSize((((h0 + e.clientY - y0) * 16) / 9 / stageW) * 100, false);
+    const fit = fitViewPct();
+    // Arrastrar máis alá do que colle non fai nada: así a preferencia gardada é a que se ve.
+    const move = (e) => setViewSize(Math.min(fit, (((h0 + e.clientY - y0) * 16) / 9 / stageW) * 100), false);
     const up = () => {
       handle.removeEventListener('pointermove', move);
       handle.removeEventListener('pointerup', up);
@@ -261,7 +287,7 @@ function initViewSize() {
   });
   handle.addEventListener('dblclick', () => setViewSize(null));
   handle.addEventListener('keydown', (e) => {
-    const now = viewPct ?? autoViewPct();
+    const now = Math.min(viewPct ?? SIZE_MAX, fitViewPct());
     const step = { ArrowDown: 5, ArrowRight: 5, ArrowUp: -5, ArrowLeft: -5 }[e.key];
     if (step) setViewSize(now + step);
     else if (e.key === 'Home') setViewSize(SIZE_MIN);
@@ -276,6 +302,11 @@ function initViewSize() {
 export function setStatus(key, vars) {
   status = key ? [key, vars] : null;
   $('status').textContent = status ? t(...status) : '';
+  updateExportRow();
+}
+
+function updateExportRow() {
+  $('exportRow').hidden = !status && $('progress').hidden && $('download').hidden;
 }
 
 function errStatus(err, fallback) {
@@ -286,17 +317,22 @@ function errStatus(err, fallback) {
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 // ------------------------------------------------------------- liña de tempo
+// Cun dedo hai que moverse un pouco máis antes de que conte como arrastrar:
+// así un toque escolle e non empurra.
+const dragSlop = (ev) => (ev.pointerType === 'touch' ? 10 : 5);
+
 function dragInTime(block, obj, strip) {
   block.addEventListener('pointerdown', (ev) => {
     const D = duration();
     if (!D || ui.exporting) return;
     const width = strip.getBoundingClientRect().width;
     const x0 = ev.clientX, at0 = obj.at;
+    const slop = dragSlop(ev);
     let moved = false;
     try { block.setPointerCapture(ev.pointerId); } catch { /* punteiro sen captura */ }
     const move = (e) => {
       const dx = e.clientX - x0;
-      if (Math.abs(dx) > 4) moved = true;
+      if (Math.abs(dx) > slop) moved = true;
       if (!moved) return;
       obj.at = Math.min(Math.max(0, at0 + (dx / width) * D), Math.max(0, D - 0.1));
       block.style.left = `${(obj.at / D) * 100}%`;
@@ -366,8 +402,13 @@ function clipPointer(b, c) {
     const r = b.getBoundingClientRect();
     const stripW = b.parentElement.getBoundingClientRect().width;
     const D0 = duration() || 1;
-    const edgeW = Math.min(12, r.width / 3);
-    const edge = ev.clientX - r.left <= edgeW ? 'l' : r.right - ev.clientX <= edgeW ? 'r' : null;
+    // Cun dedo, os bordos son máis anchos pero só se recorta o anaco xa
+    // escollido (os seus bordos vense); así non se recorta sen querer.
+    const finger = ev.pointerType === 'touch';
+    const edgeW = Math.min(finger ? 24 : 12, r.width / 3);
+    const canTrim = !finger || b.classList.contains('sel');
+    const edge = !canTrim ? null : ev.clientX - r.left <= edgeW ? 'l' : r.right - ev.clientX <= edgeW ? 'r' : null;
+    const slop = finger ? 10 : 6;
     const x0 = ev.clientX, y0 = ev.clientY;
     const base = { in: c.in, out: c.out };
     let mode = null;
@@ -376,7 +417,7 @@ function clipPointer(b, c) {
     const move = (e) => {
       const dx = e.clientX - x0, dy = e.clientY - y0;
       if (!mode) {
-        if (Math.hypot(dx, dy) < 6) return;
+        if (Math.hypot(dx, dy) < slop) return;
         mode = edge ? 'trim' : 'move';
         preview.pause();
         if (ui.picking) setPicking(false);
@@ -490,6 +531,7 @@ function renderTimeline() {
         onclick: (ev) => {
           if (suppressClick) { ev.stopPropagation(); return; }
           select('clip', c.id);
+          autoTab('clip');
         },
       },
       el('span', { class: 'grip l' }),
@@ -513,7 +555,7 @@ function renderTimeline() {
       const b = el('button', {
         class: `item${ui.sel?.type === type && ui.sel.id === o.id ? ' sel' : ''}`,
         text: labelOf(o),
-        onclick: (ev) => { ev.stopPropagation(); select(type, o.id); },
+        onclick: (ev) => { ev.stopPropagation(); select(type, o.id); autoTab(type); },
       });
       b.style.left = `${(o.at / D) * 100}%`;
       b.style.width = `${(durOf(o) / D) * 100}%`;
@@ -714,6 +756,7 @@ function initCanvas() {
     if (hit) {
       drag = { item: hit, dx: x - hit.x, dy: y - hit.y };
       select('overlay', hit.id);
+      autoTab('overlay');
     } else {
       const s = selClip();
       const size = s?.clip.fx.size;
@@ -804,8 +847,12 @@ async function toggleRecording() {
 }
 
 // ---------------------------------------------------------------------- gardar
+// Para crear o vídeo fai falta WebCodecs (Chrome, Edge; Safari só en parte).
+const canExport = () => typeof window.VideoEncoder === 'function' && typeof window.VideoDecoder === 'function';
+
 async function exportVideo() {
   if (!duration() || ui.exporting) return null;
+  if (!canExport()) { setStatus('err_encode'); return null; }
   preview.pause();
   if (ui.picking) setPicking(false);
   ui.exporting = true;
@@ -833,6 +880,7 @@ async function exportVideo() {
     errStatus(err, ['err_save', { msg: err.message }]);
   } finally {
     $('progress').hidden = true;
+    updateExportRow();
     ui.exporting = false;
     overlay.markDirty();
     invalidate();
@@ -996,6 +1044,7 @@ export function refresh() {
   renderClipCard();
   renderFx();
   renderItemBox();
+  updateExportRow();
 }
 
 let wasPlaying = false;
@@ -1017,6 +1066,97 @@ function seekTo(tt) {
   $('seek').value = D ? Math.round((ui.t / D) * 1000) : 0;
   updatePlayheads();
   renderClipCard();
+}
+
+// ------------------------------------------------- tablets: modos e pestanas
+// "touch": hai pantalla táctil → todo máis grande. "compact": pouco ancho ou
+// táctil → cabeceira en iconas e un só ➕ por pista.
+const TOUCH_Q = window.matchMedia('(any-pointer: coarse)');
+const TABS_Q = window.matchMedia('(orientation: portrait), (max-width: 899px)');
+const forced = new URLSearchParams(location.search).has('tactil'); // só para probas
+
+function updateModes() {
+  const root = document.documentElement;
+  const touch = forced || TOUCH_Q.matches;
+  root.classList.toggle('touch', touch);
+  root.classList.toggle('compact', touch || window.innerWidth < 1400);
+  applyViewSize();
+}
+
+const TAB_OF = { clip: 'fx', overlay: 'stk', sound: 'snd' };
+let tab = 'fx';
+
+function showTab(name) {
+  tab = name;
+  $('panel').dataset.tab = name;
+  document.querySelectorAll('#tabs [data-tab]').forEach((b) => {
+    const on = b.dataset.tab === name;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+  $('panel').scrollTop = 0;
+}
+
+// Ao tocar algo na liña de tempo ou no vídeo, ábrese o panel que lle toca
+// (se se está no de «Anaco» e se toca outro anaco, quédase alí).
+function autoTab(type) {
+  if (!TABS_Q.matches) return;
+  const want = type === 'clip' && tab === 'clip' ? 'clip' : TAB_OF[type];
+  if (want && want !== tab) showTab(want);
+}
+
+let addTrack = 0;
+function openAddDialog(ti) {
+  addTrack = ti;
+  $('addTitle').textContent = t('addTitle', { track: t(ti ? 'trackTop' : 'trackBottom').replace(/^\d+ · /, '') });
+  $('addDialog').showModal();
+}
+
+function openProjectMenu() {
+  if (ui.exporting || projects.state.busy) return;
+  $('pmNote').textContent = projects.HAS_FS ? '' : t('pm_download');
+  $('projDialog').showModal();
+}
+
+function initTablet() {
+  updateModes();
+  TOUCH_Q.addEventListener?.('change', updateModes);
+  window.addEventListener('resize', updateModes);
+  TABS_Q.addEventListener?.('change', () => setTimeout(applyViewSize, 0));
+  document.querySelectorAll('#tabs [data-tab]').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  showTab(tab);
+
+  document.querySelectorAll('[data-add]').forEach((b) => b.addEventListener('click', () => {
+    if (ui.exporting) return;
+    preview.pause();
+    openAddDialog(+b.dataset.add);
+  }));
+  $('addFileIn').addEventListener('change', (e) => {
+    const files = [...e.target.files];
+    e.target.value = '';
+    $('addDialog').close();
+    if (files.length) addFiles(addTrack, files);
+  });
+  $('addCamBtn').addEventListener('click', () => {
+    $('addDialog').close();
+    camera.openCameraDialog((file) => addFiles(addTrack, [file]));
+  });
+  $('addStopBtn').addEventListener('click', () => {
+    $('addDialog').close();
+    const ti = addTrack;
+    openStopMotion(({ frames, fps }) => addFrames(ti, frames, fps));
+  });
+
+  $('pjMenu').addEventListener('click', openProjectMenu);
+  const menu = (id, fn) => $(id).addEventListener('click', () => { $('projDialog').close(); fn(); });
+  menu('pmNew', () => projects.newProject());
+  menu('pmOpen', showOpenDialog);
+  menu('pmSave', () => projects.save());
+  menu('pmSaveAs', () => projects.saveAs());
+  $('privacyBtn').addEventListener('click', () => notify('privacy'));
+  // Sen File System Access (Android, Firefox…) o selector do sistema pode
+  // non deixar escoller unha extensión que non coñece: mellor non filtrar.
+  if (!projects.HAS_FS) $('pjFile').removeAttribute('accept');
 }
 
 // ---------------------------------------------------------------------- inicio
@@ -1130,6 +1270,7 @@ export function initUI(view) {
   // Os deslizadores cambian o proxecto sen repintar todo: revísase cada pouco.
   setInterval(renderProjectBar, 700);
   initViewSize();
+  initTablet();
 
   onLangChange(() => { renderStatic(); retranslateStopMotion(); camera.retranslate(); refresh(); });
   preview.setOnTick(onTick);
@@ -1149,5 +1290,5 @@ export const api = {
   moveClip: (id, dir) => { moveClip(id, dir); refresh(); },
   projects, updates, checkUpdates, applyUpdate, startupUpdate, setViewSize, notify,
   history, recovery, camera, undo: doUndo, redo: doRedo, commit, startupRecovery, loadExample, probeExamples,
-  dropFiles, nudgeClip, trimClip, placeClip, duration,
+  dropFiles, nudgeClip, trimClip, placeClip, duration, showTab, tab: () => tab, fitViewPct, fitNow: applyViewSize, openAddDialog,
 };

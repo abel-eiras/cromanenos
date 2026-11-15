@@ -41,6 +41,9 @@ export async function init(h) {
   hooks = { ...hooks, ...h };
   try {
     if (!navigator.storage?.getDirectory) return;
+    // Hai navegadores (Safari antigo) con almacenamento propio pero sen forma
+    // de escribir nel desde a páxina: entón a recuperación queda apagada.
+    if (typeof FileSystemFileHandle === 'undefined' || !('createWritable' in FileSystemFileHandle.prototype)) return;
     let got = false;
     for (let i = 0; i < 4 && !got; i++) {
       got = await takeLock();

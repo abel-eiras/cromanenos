@@ -14,21 +14,23 @@
 </head>
 <body>
 <header>
-  <h1>Cromanenos</h1>
+  <h1><img src="icons/favicon.png" alt="" class="logo"><span class="appname">Cromanenos</span></h1>
   <div class="proj" role="group" data-i18n-aria="pj_area">
     <span id="projName" class="pname"></span>
+    <button id="pjMenu" class="iconbtn compact-only" data-i18n-aria="pj_area" data-i18n-title="pj_area">📁</button>
     <button id="pjNew" data-i18n="pj_new"></button>
     <button id="pjOpen" data-i18n="pj_open"></button>
     <button id="pjSave" data-i18n="pj_save"></button>
     <button id="pjSaveAs" data-i18n="pj_saveAs"></button>
   </div>
   <div class="proj" role="group">
-    <button id="undoBtn" disabled data-i18n="undo" data-i18n-title="undoTip"></button>
-    <button id="redoBtn" disabled data-i18n="redo" data-i18n-title="redoTip"></button>
+    <button id="undoBtn" disabled data-i18n-title="undoTip" data-i18n-aria="undoLbl"><span aria-hidden="true">↩</span><span class="lbl" data-i18n="undoLbl"></span></button>
+    <button id="redoBtn" disabled data-i18n-title="redoTip" data-i18n-aria="redoLbl"><span aria-hidden="true">↪</span><span class="lbl" data-i18n="redoLbl"></span></button>
   </div>
   <span class="spacer"></span>
   <p class="privacy" data-i18n="privacy"></p>
-  <button id="openTricks" class="big" data-i18n="tricks"></button>
+  <button id="privacyBtn" class="iconbtn compact-only" data-i18n-aria="privacyTip" data-i18n-title="privacyTip">🔒</button>
+  <button id="openTricks" class="big" data-i18n-aria="tricksLbl"><span aria-hidden="true">💡</span><span class="lbl" data-i18n="tricksLbl"></span></button>
   <button id="openSettings" class="big" data-i18n-aria="settings" data-i18n-title="settings">⚙</button>
 </header>
 
@@ -44,13 +46,14 @@
       <div id="viewHandle" role="slider" tabindex="0" aria-orientation="vertical"
            aria-valuemin="25" aria-valuemax="100" aria-valuenow="100"
            data-i18n-aria="resize" data-i18n-title="resize"><span aria-hidden="true">⋯ ↕ ⋯</span></div>
+      <p id="hint" class="hint"></p>
     </div>
-    <p id="hint" class="hint"></p>
 
     <div class="transport">
       <button id="play" class="big" disabled></button>
       <input id="seek" type="range" min="0" max="1000" value="0" disabled data-i18n-aria="position">
       <span id="clock">0:00 / 0:00</span>
+      <button id="export" class="big go" disabled data-i18n="save"></button>
     </div>
 
     <div class="timeline">
@@ -58,18 +61,20 @@
         <span class="tlabel" data-i18n="trackTop"></span>
         <div class="strip clips" id="strip1" data-track="1"></div>
         <div class="tadd">
-          <label class="file" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="1"></label>
-          <button data-cam="1" data-i18n-title="addCam" data-i18n-aria="addCam">🎥</button>
-          <button data-stop="1" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
+          <button class="addone compact-only" data-add="1" data-i18n-title="addAny" data-i18n-aria="addAny">➕</button>
+          <label class="file wide-only" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="1"></label>
+          <button class="wide-only" data-cam="1" data-i18n-title="addCam" data-i18n-aria="addCam">🎥</button>
+          <button class="wide-only" data-stop="1" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
         </div>
       </div>
       <div class="trow">
         <span class="tlabel" data-i18n="trackBottom"></span>
         <div class="strip clips" id="strip0" data-track="0"></div>
         <div class="tadd">
-          <label class="file" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="0"></label>
-          <button data-cam="0" data-i18n-title="addCam" data-i18n-aria="addCam">🎥</button>
-          <button data-stop="0" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
+          <button class="addone compact-only" data-add="0" data-i18n-title="addAny" data-i18n-aria="addAny">➕</button>
+          <label class="file wide-only" data-i18n-title="addFile" data-i18n-aria="addFile">➕<input type="file" multiple accept="video/*,image/*" data-track="0"></label>
+          <button class="wide-only" data-cam="0" data-i18n-title="addCam" data-i18n-aria="addCam">🎥</button>
+          <button class="wide-only" data-stop="0" data-i18n-title="addStop" data-i18n-aria="addStop">📸</button>
         </div>
       </div>
       <div class="trow thin">
@@ -84,16 +89,22 @@
       </div>
     </div>
 
-    <div class="export">
-      <button id="export" class="big go" disabled data-i18n="save"></button>
+    <div id="exportRow" class="export" hidden>
       <progress id="progress" max="1" value="0" hidden></progress>
       <a id="download" hidden data-i18n="download"></a>
       <span id="status" role="status"></span>
     </div>
   </section>
 
-  <section class="panel">
-    <div class="card">
+  <nav id="tabs" class="tabs" role="tablist" data-i18n-aria="tabsLbl">
+    <button role="tab" data-tab="clip"><span aria-hidden="true">🎬</span><span data-i18n="tab_clip"></span></button>
+    <button role="tab" data-tab="fx"><span aria-hidden="true">✨</span><span data-i18n="tab_fx"></span></button>
+    <button role="tab" data-tab="stk"><span aria-hidden="true">⭐</span><span data-i18n="tab_stk"></span></button>
+    <button role="tab" data-tab="snd"><span aria-hidden="true">🔊</span><span data-i18n="tab_snd"></span></button>
+  </nav>
+
+  <section id="panel" class="panel" data-tab="fx">
+    <div class="card" data-tab="clip">
       <h2 data-i18n="cardClip"></h2>
       <p id="clipName" class="name"></p>
       <div class="tools">
@@ -107,14 +118,14 @@
       </label>
     </div>
 
-    <div class="card">
+    <div class="card" data-tab="fx">
       <h2 data-i18n="cardFx"></h2>
       <p id="fxHint" class="hint" data-i18n="fxHint"></p>
       <div id="fxPalette" class="palette"></div>
       <div id="fxList"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-tab="stk">
       <h2 data-i18n="cardStickers"></h2>
       <div id="stickerPalette" class="palette emoji"></div>
       <div class="row">
@@ -136,7 +147,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" data-tab="snd">
       <h2 data-i18n="cardSound"></h2>
       <button id="rec" class="big"></button>
       <p class="hint" data-i18n="sfxTip"></p>
@@ -154,6 +165,7 @@
   <h2>⚙ <span data-i18n="settings"></span></h2>
   <h3 data-i18n="language"></h3>
   <div id="langButtons" class="palette"></div>
+  <p class="hint" data-i18n="privacy"></p>
   <h3 data-i18n="ver_title"></h3>
   <p id="verLine"></p>
   <div class="row">
@@ -187,6 +199,28 @@
 </dialog>
 
 <input id="pjFile" type="file" accept=".cromanenos" hidden>
+
+<dialog id="projDialog">
+  <h2>📁 <span data-i18n="pj_area"></span></h2>
+  <div class="bigmenu">
+    <button id="pmNew" class="menuitem" data-i18n="pj_new"></button>
+    <button id="pmOpen" class="menuitem" data-i18n="pj_open"></button>
+    <button id="pmSave" class="menuitem" data-i18n="pj_save"></button>
+    <button id="pmSaveAs" class="menuitem" data-i18n="pj_saveAs"></button>
+  </div>
+  <p id="pmNote" class="hint"></p>
+  <div class="row end"><button class="big" data-close data-i18n="close"></button></div>
+</dialog>
+
+<dialog id="addDialog">
+  <h2 id="addTitle"></h2>
+  <div class="bigmenu">
+    <label class="file menuitem"><span data-i18n="addFileBig"></span><input id="addFileIn" type="file" multiple accept="video/*,image/*"></label>
+    <button id="addCamBtn" class="menuitem" data-i18n="addCamBig"></button>
+    <button id="addStopBtn" class="menuitem" data-i18n="addStopBig"></button>
+  </div>
+  <div class="row end"><button class="big" data-close data-i18n="cancel"></button></div>
+</dialog>
 
 <dialog id="recoverDialog">
   <h2 data-i18n="rc_title"></h2>

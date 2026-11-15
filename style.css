@@ -15,25 +15,62 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--ink); }
-header { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: .6rem 1rem; }
-h1 { margin: 0; font-size: 1.5rem; color: var(--accent); }
+html { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+/* A aplicación ocupa xusto a pantalla: só se despraza o panel por dentro. */
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+  overscroll-behavior: none; -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+input[type=text], textarea, .hint, p { -webkit-user-select: text; user-select: text; }
+button, label.file, summary, a { touch-action: manipulation; }
+header { flex: none; display: flex; align-items: center; gap: 1rem; flex-wrap: nowrap; padding: .6rem 1rem; }
+header > * { flex-shrink: 0; }
+header > .privacy, header > .spacer { flex-shrink: 1; }
+h1 { margin: 0; font-size: 1.5rem; color: var(--accent); display: flex; align-items: center; gap: .4rem; }
+h1 .logo { width: 2.2rem; height: 2.2rem; }
+#undoBtn .lbl, #redoBtn .lbl, #openTricks .lbl { margin-left: .35rem; }
+html:not(.compact) .compact-only { display: none !important; }
 h2 { margin: 0 0 .3rem; font-size: 1.05rem; }
 h3 { margin: .6rem 0 .3rem; font-size: 1rem; color: var(--muted); }
-.privacy { margin: 0; color: var(--muted); font-size: .9rem; }
+.privacy { margin: 0; color: var(--muted); font-size: .9rem; min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .spacer { flex: 1; }
 .proj { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
 .pname { font-weight: 700; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: .2rem; }
 .notice {
-  display: flex; align-items: center; gap: .8rem; justify-content: space-between;
+  flex: none; display: flex; align-items: center; gap: .8rem; justify-content: space-between;
   margin: 0 1rem .6rem; padding: .5rem .8rem; border-radius: 10px; background: #2f4a3a; color: var(--ink);
 }
 
-main { display: grid; grid-template-columns: minmax(0, 1fr) 23rem; gap: 1rem; padding: 0 1rem 1rem; align-items: start; }
-@media (max-width: 950px) { main { grid-template-columns: 1fr; } }
+main {
+  flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 23rem; grid-template-rows: minmax(0, 1fr);
+  gap: 1rem; padding: 0 1rem .8rem; align-items: stretch;
+}
+.tabs { display: none; }
+.panel { overflow-y: auto; overscroll-behavior: contain; min-height: 0; padding-bottom: .5rem; }
 
-.stage { min-width: 0; }
-#viewWrap { width: 100%; max-width: 100%; margin: 0 auto; }
+/* Vertical ou estreito: a vista e a liña de tempo arriba, e debaixo unhas
+   pestanas que amosan un só panel. */
+@media (orientation: portrait), (max-width: 899px) {
+  main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto minmax(9rem, 32%); gap: .5rem; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; }
+  .tabs button { display: flex; align-items: center; justify-content: center; gap: .35rem; padding: .5rem .3rem; font-weight: 700; }
+  .tabs button.on { background: var(--accent); color: var(--bg); }
+  .panel[data-tab=clip] > .card:not([data-tab=clip]),
+  .panel[data-tab=fx] > .card:not([data-tab=fx]),
+  .panel[data-tab=stk] > .card:not([data-tab=stk]),
+  .panel[data-tab=snd] > .card:not([data-tab=snd]) { display: none; }
+}
+
+.stage { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: .5rem; overflow-y: auto; overflow-x: hidden; }
+.stage > * { flex: none; }
+#viewWrap { position: relative; width: 100%; max-width: 100%; margin: 0 auto; }
+#viewWrap .hint {
+  position: absolute; left: .5rem; right: .5rem; top: .5rem; margin: 0; min-height: 0; text-align: center; pointer-events: none;
+  padding: .3rem .7rem; border-radius: 10px; background: rgba(16, 19, 31, .78); color: var(--ink); font-weight: 600;
+}
+#viewWrap .hint:empty { display: none; }
 #view { width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; display: block; touch-action: none; }
 /* Asa para cambiar o tamaño da vista */
 #viewHandle { height: 1.7rem; display: flex; align-items: center; justify-content: center; cursor: ns-resize; touch-action: none; border-radius: 8px; user-select: none; }
@@ -48,15 +85,18 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 23rem; gap: 1rem; pa
 .hint { margin: .3rem 0; color: var(--muted); font-size: .9rem; min-height: 1.2em; }
 .hint.warn { color: var(--accent); }
 
-.transport, .export { display: flex; align-items: center; gap: .75rem; margin-top: .5rem; flex-wrap: wrap; }
-#seek { flex: 1; min-width: 8rem; }
+.transport, .export { display: flex; align-items: center; gap: .75rem; }
+.transport { flex-wrap: nowrap; }
+.export { flex-wrap: wrap; }
+#seek { flex: 1; min-width: 4rem; }
+#export { white-space: nowrap; }
 #clock { font-variant-numeric: tabular-nums; color: var(--muted); }
 progress { flex: 1; height: 1.2rem; }
 #download { color: var(--bg); background: var(--go); padding: .6rem 1rem; border-radius: 10px; font-weight: 700; text-decoration: none; }
 #status { color: var(--muted); }
 
 /* ------------------------------------------------------------ liña de tempo */
-.timeline { margin-top: .75rem; display: flex; flex-direction: column; gap: .35rem; }
+.timeline { display: flex; flex-direction: column; gap: .35rem; }
 .trow { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 9rem; gap: .5rem; align-items: center; }
 .tlabel { font-size: .85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .strip { position: relative; height: 3.2rem; background: #151a29; border-radius: 8px; overflow: hidden; cursor: pointer; }
@@ -84,6 +124,7 @@ progress { flex: 1; height: 1.2rem; }
 
 /* -------------------------------------------------------------------- panel */
 .panel { display: flex; flex-direction: column; gap: .75rem; }
+.panel > .card { flex: none; }
 .card { background: var(--card); border-radius: 12px; padding: .8rem; display: flex; flex-direction: column; gap: .5rem; }
 .card label, dialog label { display: flex; flex-direction: column; gap: .2rem; font-size: .9rem; color: var(--muted); }
 .name { margin: 0; font-size: .9rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -119,7 +160,19 @@ button.x { padding: .25rem .55rem; background: #5a2f45; }
 .speed button { padding: .4rem .55rem; font-size: .9rem; }
 
 /* ----------------------------------------------------------------- diálogos */
-dialog { background: var(--card); color: var(--ink); border: 0; border-radius: 16px; padding: 1.2rem; width: min(42rem, 92vw); max-height: 92vh; }
+dialog {
+  background: var(--card); color: var(--ink); border: 0; border-radius: 16px; padding: 1.2rem 1.2rem 0;
+  width: min(42rem, calc(100vw - 1.5rem)); max-height: calc(100vh - 1.5rem); max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto; overscroll-behavior: contain;
+}
+/* Os botóns de abaixo quedan sempre á vista, aínda que o resto se desprace. */
+dialog > .row.end:last-child {
+  position: sticky; bottom: 0; margin: .8rem -1.2rem 0; padding: .8rem 1.2rem 1rem; background: var(--card);
+  box-shadow: 0 -8px 12px -8px rgba(0, 0, 0, .45);
+}
+.bigmenu { display: flex; flex-direction: column; gap: .6rem; }
+.menuitem { display: flex; align-items: center; justify-content: flex-start; text-align: left; font-size: 1.15rem; font-weight: 700; padding: .9rem 1.1rem; min-height: 3.4rem; width: 100%; }
+label.file.menuitem { align-self: stretch; }
 dialog::backdrop { background: rgba(8, 10, 20, .75); }
 dialog h2 { font-size: 1.3rem; margin-bottom: .6rem; }
 details { background: #222844; border-radius: 10px; padding: .6rem .8rem; margin-bottom: .5rem; }
@@ -132,7 +185,10 @@ summary { font-weight: 700; font-size: 1.05rem; cursor: pointer; }
 #verLine { margin: 0; }
 ol { margin: .5rem 0 0; padding-left: 1.4rem; line-height: 1.5; }
 
-.smview { position: relative; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; }
+.smview {
+  position: relative; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9;
+  width: min(100%, calc(48vh * 16 / 9)); width: min(100%, calc(48dvh * 16 / 9)); margin: 0 auto;
+}
 .smview video, .smview canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .smview canvas { opacity: .4; pointer-events: none; }
 .smview.nocam video { display: none; }
@@ -162,4 +218,97 @@ ol { margin: .5rem 0 0; padding-left: 1.4rem; line-height: 1.5; }
 }
 .camtime { position: absolute; top: .6rem; left: .6rem; padding: .15rem .6rem; border-radius: 8px; background: rgba(200, 30, 30, .9); color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
 button.try { align-self: flex-start; margin-top: .6rem; background: var(--go); color: var(--bg); font-weight: 700; }
-#undoBtn, #redoBtn { min-width: 2.6rem; }
+#undoBtn, #redoBtn { min-width: 48px; }
+
+/* ------------------------------------------------------------ deslizadores */
+input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; height: 1.8rem; margin: 0; cursor: pointer; }
+input[type=range]:disabled { opacity: .4; cursor: default; }
+input[type=range]::-webkit-slider-runnable-track { height: .5rem; border-radius: .25rem; background: #151a29; box-shadow: inset 0 0 0 1px #3a4370; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 1.25rem; height: 1.25rem; margin-top: -.375rem;
+  border-radius: 50%; background: var(--accent); border: 2px solid var(--bg);
+}
+input[type=range]::-moz-range-track { height: .5rem; border-radius: .25rem; background: #151a29; box-shadow: inset 0 0 0 1px #3a4370; }
+input[type=range]::-moz-range-thumb { width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.panel input[type=range] { touch-action: pan-y; }
+#seek { touch-action: none; }
+.strip, #viewHandle, #view { touch-action: none; }
+
+/* ------------------------------------------------- cabeceira compacta (tablets) */
+.compact header { gap: .5rem; padding: .45rem .8rem; flex-wrap: nowrap; }
+.compact .compact-only { display: inline-flex; }
+.compact .wide-only, .compact .privacy, .compact #pjNew, .compact #pjOpen, .compact #pjSave, .compact #pjSaveAs { display: none !important; }
+.compact .pname { min-width: 0; max-width: 11rem; font-size: .95rem; }
+.compact .proj { flex-wrap: nowrap; min-width: 0; }
+.compact header .proj:first-of-type { flex: 0 1 auto; }
+.compact #undoBtn .lbl, .compact #redoBtn .lbl { display: none; }
+.iconbtn, .compact #undoBtn, .compact #redoBtn, #openSettings { justify-content: center; align-items: center; font-size: 1.25rem; padding: .4rem .7rem; }
+@media (max-width: 1099px) { .compact h1 .appname { display: none; } }
+@media (max-width: 640px) { .compact #openTricks .lbl, .compact .pname { display: none !important; } }
+.compact .trow { grid-template-columns: 5.6rem minmax(0, 1fr) 3rem; }
+.compact .tadd { justify-content: flex-end; }
+.addone { font-size: 1.3rem; justify-content: center; align-items: center; padding: .3rem; width: 100%; }
+
+/* ----------------------------------------------- dedos: todo máis grande */
+.touch { font-size: 18px; }
+.touch button:not(.block):not(.item), .touch label.file, .touch summary, .touch #download, .touch .tabs button {
+  min-height: 48px; min-width: 48px;
+}
+.touch button:not(.block):not(.item), .touch label.file { display: inline-flex; align-items: center; justify-content: center; }
+.touch .fxbtn { flex-direction: column; min-height: 3.6rem; }
+.touch .menuitem, .touch .recent { justify-content: flex-start; }
+.touch .recent { justify-content: space-between; }
+.touch #play, .touch #export, .touch button.big, .touch .addone, .touch .tabs button { min-height: 56px; }
+.touch .addone { min-width: 56px; }
+.touch.compact .trow { grid-template-columns: 5.6rem minmax(0, 1fr) 56px; }
+.touch summary { display: flex; align-items: center; }
+.touch #download { display: inline-flex; align-items: center; }
+.touch .tools, .touch .speed, .touch .row, .touch .palette, .touch .tadd, .touch .proj, .touch .bigmenu { gap: .5rem; }
+.touch .palette.emoji { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+.touch .palette.emoji button { font-size: 1.5rem; }
+.touch button.x { min-width: 48px; min-height: 48px; font-size: 1.1rem; }
+.touch .strip { height: 56px; }
+.touch .trow.thin .strip { height: 48px; }
+.touch .item { min-width: 48px; font-size: .85rem; top: 0; bottom: 0; }
+.touch #viewHandle { height: 48px; align-items: flex-start; }
+.touch #viewHandle span { height: 1.7rem; line-height: 1.7rem; min-width: 9rem; font-size: 1.1rem; }
+.touch input[type=range] { height: 48px; }
+.touch input[type=range]::-webkit-slider-runnable-track { height: 14px; border-radius: 7px; }
+.touch input[type=range]::-webkit-slider-thumb { width: 36px; height: 36px; margin-top: -11px; border-width: 3px; }
+.touch input[type=range]::-moz-range-track { height: 14px; border-radius: 7px; }
+.touch input[type=range]::-moz-range-thumb { width: 32px; height: 32px; border-width: 3px; }
+.touch input[type=text] { min-height: 48px; font-size: 1.1rem; }
+.touch .block .grip { width: 14px; }
+.touch .block:hover .grip { background: none; box-shadow: none; }
+.touch .block.sel .grip { background: rgba(255, 255, 255, .85); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35); }
+.touch .card { padding: .8rem; gap: .6rem; }
+.touch .timeline { gap: .45rem; }
+
+/* Tablets pequenas en horizontal (8"): cada píxel de alto conta. */
+#play, #clock { white-space: nowrap; }
+@media (max-width: 1099px) and (orientation: landscape) { main { grid-template-columns: minmax(0, 1fr) 21rem; gap: .8rem; } }
+@media (max-height: 700px) {
+  .touch header { padding-top: .25rem; padding-bottom: .25rem; }
+  .touch .strip { height: 52px; }
+  .touch #play, .touch #export { min-height: 48px; }
+  .touch .timeline { gap: .35rem; }
+  .touch .stage { gap: .4rem; }
+  /* A vista xa colle o máis grande posible: aquí a asa só quitaría sitio. */
+  .touch #viewHandle { display: none; }
+}
+
+/* Pantallas moi estreitas (móbiles): non é o obxectivo, pero que non se rompa. */
+@media (max-width: 599px) {
+  .compact header { gap: .3rem; padding-left: .5rem; padding-right: .5rem; }
+  .compact h1 { display: none; }
+  .compact header > * { flex-shrink: 0; }
+  .compact header .spacer { flex: 1 1 0; min-width: 0; }
+  .transport { flex-wrap: wrap; }
+  #export { flex: 1 1 100%; }
+  .tabs button span:not([aria-hidden]) { display: none; }
+  .tabs button span[aria-hidden] { font-size: 1.4rem; }
+  .compact .trow, .touch.compact .trow { grid-template-columns: 4.6rem minmax(0, 1fr) 52px; }
+  .tlabel { font-size: .75rem; }
+  main { padding: 0 .5rem .5rem; }
+}
